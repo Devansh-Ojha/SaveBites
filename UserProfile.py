@@ -11,7 +11,11 @@ class UserProfile():
 
         # set ()
         self.dietary_restrictions = dietary_restrictions
-        # 
+        # heap? have user presented with different types of cuisines, can pick as many as they want
+        # [ (cusine, rating) ]
+        # If there are 25 cuisines and they only select 5 for now, make rating of first selection have a rating
+        # of 25, then each after decrement by 1
+        # allow user to add new cuisine preferneces at any time, and reorder preferences as well
         self.cusine_preferences = cuisine_preferences
         # int 
         self.budget = budget
@@ -28,7 +32,8 @@ class UserProfile():
         self.recipe_ratings = []
         # can make a max heap using second tuple element (rating)?
         # [ (recipe, rating) ]
-        # if we train a model, how can we use "semantic similarity" but it's recipes instead of words?
+        # if we train a model, how can we use "semantic similarity" but it's recipes instead of words in order to recommend similar tasting recipes?
+        # Or maybe it could be similar ingredient recipes / similar cuisine
         self.liked_recipes = []
         # can make a max heap
         # [ (recipe, rating)]
