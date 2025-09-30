@@ -26,4 +26,12 @@ class UserProfile():
         self.purchase_history = []
         # [ { recipe : rating} ]
         self.recipe_ratings = []
+        # can make a max heap using second tuple element (rating)?
+        # [ (recipe, rating) ]
+        # if we train a model, how can we use "semantic similarity" but it's recipes instead of words?
+        self.liked_recipes = []
+        # can make a max heap
+        # [ (recipe, rating)]
+        self.disliked_recipes = []
 
+    def 
