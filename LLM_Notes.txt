@@ -1,0 +1,31 @@
+User datastructure
+
+User Profile:
+Past purchases (ingredients + frequency)
+Dietary restrictions
+Cuisine preferences
+Budget
+Time available
+Appliances available
+Past ratings/reviews of recipes
+
+Can we get an api key?
+LLM Testing https://colab.research.google.com/drive/1Q1fSEu1tpQWJ401TyEm2ZkH2p2sjWQph?usp=sharing 
+
+Pantry Database
+Ingredients currently available
+Quantity remaining
+Expiry dates (from FoodKeeper dataset or scanned labels)
+Recipe Database
+RecipeNLG or Forkify API or something??
+Ingredient lists
+Cooking times
+Nutrition facts (or USDA FoodData API for calories)
+
+for example the program can take
+INPUT: [chicken, white rice, broccoli] and that the user is vegetarian, budget is less than $10, cooking time is 1 hour, as a list
+then the program preprocess - filter out chicken recipes, change white rice to rice, count calories, check the user's pantry for any 
+ingredients close to expiration, etc
+then the model returns the vegetarian recipes only and maybe ranks by past ratings? or the user's past ratings?
+the validation layer will check that the recipe fits all the constraints
+OUTPUT: top ?? number of recipes AND lists of missing ingredients
