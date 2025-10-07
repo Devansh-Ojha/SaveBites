@@ -9,11 +9,11 @@ app.use(express.json());
 
 // Dummy ingredients database for testing
 const ingredients = [
-    {name: "tomato", quantity: 1},
-    {name: "carrot", quantity: 5},
-    {name: "chicken breast", quantity: 1},
-    {name: "potato", quantity: 3},
-    {name: "beef", quantity: 2}
+    {ingredient: "tomato", quantity: 1},
+    {ingredient: "carrot", quantity: 5},
+    {ingredient: "chicken breast", quantity: 1},
+    {ingredient: "potato", quantity: 3},
+    {ingredient: "beef", quantity: 2}
 ];
 
 // Routes
@@ -22,16 +22,19 @@ app.get('/ingredients', (req, res) => {
     res.json(items);
 });
 
+// Dummy API for getting a recipe from LLM
 app.get('dummyLLM', (req, res) => {
-    // res.
+    recipe = "";
+    res.send(recipe);
 });
 
-// GET a single item by NAME
-app.get('/ingredients/:name', (req, res) => {
-    const id = parseInt(req.params.id);
-    const ingredient = ingredients.find(ingredient => ingredient.name === name);
-    if (ingredient) {
-        res.json(item);
+// GET a single item by ingredient
+app.get('/ingredients/:ingredient', (req, res) => {
+    const ingredientName = req.params.ingredient;
+    const ingredientToAdd = ingredients.find(i => i.ingredient === ingredientName);
+    if (ingredientToAdd) {
+        const quantity = ingredientToAdd.quantity
+        res.json({ingredientName, quantity});
     } else {
         res.status(404).send('Ingredient not found');
     }
