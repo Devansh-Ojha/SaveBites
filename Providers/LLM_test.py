@@ -5,7 +5,7 @@ from UserProfile import UserProfile
 
 class Model():
 	# change this later
-	API_KEY = "AIzaSyD9-4W4UDIh4boXrFvbHYZhHXLq4M4-_VA"
+	API_KEY = 
 
 	def __init__(self):
 		self.client = genai.Client(api_key=Model.API_KEY)
