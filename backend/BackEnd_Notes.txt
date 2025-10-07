@@ -1,0 +1,5 @@
+Structure:
+    - Frontend connects to API 
+    - Ingredients pulled from internet connects to API
+    - Recipes spewed from LLM team connects to API 
+
