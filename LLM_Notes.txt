@@ -29,4 +29,4 @@ ingredients close to expiration, etc
 then the model returns the vegetarian recipes only and maybe ranks by past ratings? or the user's past ratings?
 the validation layer will check that the recipe fits all the constraints
 OUTPUT: top ?? number of recipes AND lists of missing ingredients
-check
+checks
