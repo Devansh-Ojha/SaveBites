@@ -15,5 +15,5 @@ export async function getDb() {
     client = new MongoClient(uri)
     await client.connect();
     db = client.db(dbName)
-    
+    return db
 }

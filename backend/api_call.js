@@ -4,6 +4,10 @@ const express = require('express');
 const app = express();
 const port = 3000;
 
+//init pluralize variable for node.js to handle plural cases
+var pluralize = require('pluralize')
+
+
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
@@ -31,7 +35,7 @@ app.get('dummyLLM', (req, res) => {
 // GET a single item by ingredient
 app.get('/ingredients/:ingredient', (req, res) => {
     const ingredientName = req.params.ingredient;
-    const ingredientToAdd = ingredients.find(i => i.ingredient === ingredientName);
+    const ingredientToAdd = ingredients.find(i => pluralize.singular(ingredient.toLowerCase()) === pluralize.singular(ingredientName.toLowerCase()));
     if (ingredientToAdd) {
         const quantity = ingredientToAdd.quantity
         res.json({ingredientName, quantity});
