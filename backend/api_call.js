@@ -1,58 +1,82 @@
-
+import { getDb } from "./mongodb.js";
+import { ObjectId } from "mongodb";
 
 const express = require('express');
 const app = express();
 const port = 3000;
 
-//init pluralize variable for node.js to handle plural cases
+//Initialize pluralize variable for node.js to handle plural cases
 var pluralize = require('pluralize')
 
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
-// Dummy ingredients database for testing
-const ingredients = [
-    {ingredient: "tomato", quantity: 1},
-    {ingredient: "carrot", quantity: 5},
-    {ingredient: "chicken breast", quantity: 1},
-    {ingredient: "potato", quantity: 3},
-    {ingredient: "beef", quantity: 2}
-];
-
-// Routes
-// GET all items
-app.get('/ingredients', (req, res) => {
-    res.json(items);
+//Middleware to get DB
+app.use(async (req, res, next) => {
+   try {
+    req.db = await getDb(); // attach db to the request
+    next(); // continue to next handler
+   } catch(e) {
+    next(e)
+   } 
 });
 
-// Dummy API for getting a recipe from LLM
-app.get('dummyLLM', (req, res) => {
-    recipe = "";
+// Dummy ingredients database for testing
+const ingredients = new Map([
+    ["tomato", 1],
+    ["carrot", 5],
+    ["chicken breast", 1],
+    ["potato", 3],
+    ["beef", 2]
+]);
+
+// Routes
+// GET all ingredients
+app.get('/ingredients', (req, res) => {
+    res.json(Object.fromEntries(ingredients));
+});
+
+// Dummy API call for getting a recipe from LLM (sends a string on get)
+app.get('/dummyLLMReceipe', (req, res) => {
+    recipe = "This is a fake recipe";
     res.send(recipe);
 });
 
 // GET a single item by ingredient
-app.get('/ingredients/:ingredient', (req, res) => {
-    const ingredientName = req.params.ingredient;
-    const ingredientToAdd = ingredients.find(i => pluralize.singular(ingredient.toLowerCase()) === pluralize.singular(ingredientName.toLowerCase()));
-    if (ingredientToAdd) {
-        const quantity = ingredientToAdd.quantity
-        res.json({ingredientName, quantity});
+app.get('/ingredients/:ingredient', async (req, res) => {
+    const ingredientName = pluralize.singular(req.params.ingredient.toLowerCase());
+    const ingredientQuantity = ingredients.get(ingredientName);
+    // const doc = await req.db.collection("ingredients").findOne({ name: ingredientName });
+    
+    if (ingredientQuantity != undefined) {
+        res.json({ingredientName, ingredientQuantity});
     } else {
         res.status(404).send('Ingredient not found');
     }
 });
 
-// POST a new item
-app.post('/items', (req, res) => {
-    const newItem = req.body;
-    newItem.id = items.length > 0 ? Math.max(...items.map(item => item.id)) + 1 : 1;
-    items.push(newItem);
-    res.status(201).json(newItem);
+// POST a new ingredient
+app.post('/ingredients', (req, res) => {
+    const newIngredient = pluralize.singular(req.body.ingredient.toLowerCase());
+    const newIngredientQuantity = Number(req.body.quantity);
+    
+    if (ingredients.has(newIngredient)) {
+        return res.status(400).json({ error: 'Ingredient already exists' });
+    }
+
+    ingredients.set(newIngredient, newIngredientQuantity);
+    res.status(201).json(newIngredient, newIngredientQuantity);
 });
 
-// PUT (update) an item by ID
+// GET a recipe by making a call to /ingredients, then send the JSON to /dummyLLMReceipe to get back a recipe
+app.get('/getRecipe', (req, res) => {
+    ingredients_input = app.get('/ingredients');
+    recipe = app.get('/dummyLLMReceipe', req=ingredients_input)
+    res.send(recipe);
+});
+
+// PUT (update) an ingredient by name
 app.put('/items/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const updatedItem = req.body;
@@ -65,7 +89,7 @@ app.put('/items/:id', (req, res) => {
     }
 });
 
-// DELETE an item by ID
+// DELETE an ingredient by name
 app.delete('/items/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const initialLength = items.length;

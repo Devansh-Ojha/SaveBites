@@ -17,3 +17,8 @@ export async function getDb() {
     db = client.db(dbName)
     return db
 }
+
+process.on("SIGINT", async () => {
+  if (client) await client.close();
+  process.exit(0);
+});
