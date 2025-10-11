@@ -1,18 +1,14 @@
-import { getDb } from "./mongodb.js";
-import { ObjectId } from "mongodb";
+import pluralize from 'pluralize';
+import { getDb } from './mongodb.js';
 
-const express = require('express');
+import express from 'express';
 const app = express();
-const port = 3000;
-
-//Initialize pluralize variable for node.js to handle plural cases
-var pluralize = require('pluralize')
-
+const port = 3003;
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
-//Middleware to get DB
+/*//Middleware to get DB
 app.use(async (req, res, next) => {
    try {
     req.db = await getDb(); // attach db to the request
@@ -21,6 +17,7 @@ app.use(async (req, res, next) => {
     next(e)
    } 
 });
+*/
 
 // Dummy ingredients database for testing
 const ingredients = new Map([
@@ -37,11 +34,12 @@ app.get('/ingredients', (req, res) => {
     res.json(Object.fromEntries(ingredients));
 });
 
-// Dummy API call for getting a recipe from LLM (sends a string on get)
+/*// Dummy API call for getting a recipe from LLM (sends a string on get)
 app.get('/dummyLLMReceipe', (req, res) => {
     recipe = "This is a fake recipe";
     res.send(recipe);
 });
+*/
 
 // GET a single item by ingredient
 app.get('/ingredients/:ingredient', async (req, res) => {
@@ -57,47 +55,70 @@ app.get('/ingredients/:ingredient', async (req, res) => {
 });
 
 // POST a new ingredient
-app.post('/ingredients', (req, res) => {
-    const newIngredient = pluralize.singular(req.body.ingredient.toLowerCase());
+app.post('/ingredients/:ingredient', (req, res) => {
+    const newIngredient = pluralize.singular(req.params.ingredient.toLowerCase());
     const newIngredientQuantity = Number(req.body.quantity);
     
+    // if ingredients already has the ingredient, update the quantity
     if (ingredients.has(newIngredient)) {
-        return res.status(400).json({ error: 'Ingredient already exists' });
+        const updatedQuantity = ingredients.get(newIngredient) + newIngredientQuantity;
+        if (updatedQuantity > 0) {
+            ingredients.set(newIngredient, updatedQuantity);
+            res.status(201).json({newIngredient, updatedQuantity});
+        }
+        else {
+            ingredients.delete(newIngredient); // delete ingredient if quantity is zero.
+        }
+        
     }
-
-    ingredients.set(newIngredient, newIngredientQuantity);
-    res.status(201).json(newIngredient, newIngredientQuantity);
+    else {
+        // if a new ingredient, add the ingredient to ingredients
+        if (newIngredientQuantity > 0) {
+            ingredients.set(newIngredient, newIngredientQuantity);
+            res.status(201).json({newIngredient, newIngredientQuantity});
+        }
+    }
 });
 
-// GET a recipe by making a call to /ingredients, then send the JSON to /dummyLLMReceipe to get back a recipe
+/*// GET a recipe by making a call to /ingredients, then send the JSON to /dummyLLMReceipe to get back a recipe
 app.get('/getRecipe', (req, res) => {
     ingredients_input = app.get('/ingredients');
     recipe = app.get('/dummyLLMReceipe', req=ingredients_input)
     res.send(recipe);
 });
+*/
 
-// PUT (update) an ingredient by name
-app.put('/items/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const updatedItem = req.body;
-    const index = items.findIndex(item => item.id === id);
-    if (index !== -1) {
-        items[index] = { ...items[index], ...updatedItem, id: id }; // Ensure ID remains consistent
-        res.json(items[index]);
-    } else {
-        res.status(404).send('Item not found');
+// PATCH (update) an ingredient's quantity by name
+app.patch('/ingredients/:ingredient', (req, res) => {
+    const newIngredient = pluralize.singular(req.params.ingredient.toLowerCase());
+    const newIngredientQuantity = Number(req.body.quantity);
+
+    /*retrieve current quantity from ingredients or default to 0 and add the additional quantity for the 
+    specific ingredient.*/
+    const updatedQuantity = (ingredients.get(newIngredient) ?? 0) + newIngredientQuantity;
+    if (updatedQuantity > 0) {
+        ingredients.set(newIngredient, updatedQuantity);
     }
+    else {
+        ingredients.delete(newIngredient);
+    }
+    res.status(200).json({newIngredient, updatedQuantity})
 });
 
 // DELETE an ingredient by name
-app.delete('/items/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const initialLength = items.length;
-    items = items.filter(item => item.id !== id);
-    if (items.length < initialLength) {
-        res.status(204).send(); // No content to send back
-    } else {
-        res.status(404).send('Item not found');
+app.delete('/ingredients/:ingredient', (req, res) => {
+    const ingredientToDel = pluralize.singular(req.params.ingredient.toLowerCase());
+    const deleted = ingredients.delete(ingredientToDel);
+
+    if (deleted) {
+        res.status(200).json({
+            message: 'Deleted ' + ingredientToDel
+        });
+    }
+    else {
+        res.status(404).json({
+            message: 'Ingredient not found'
+        });
     }
 });
 
@@ -105,7 +126,3 @@ app.delete('/items/:id', (req, res) => {
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
-
-function get_llm() {
-    return -1    
-}
