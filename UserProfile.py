@@ -23,7 +23,7 @@ class UserProfile():
         # If there are 25 cuisines and they only select 5 for now, make rating of first selection have a rating
         # of 25, then each after decrement by 1
         # allow user to add new cuisine preferneces at any time, and reorder preferences as well
-        self.cusine_preferences = list(cuisine_preferences)
+        self.cuisine_preferences = list(cuisine_preferences)
         # float 
         self.budget_usd = float(budget_usd)
         # int
