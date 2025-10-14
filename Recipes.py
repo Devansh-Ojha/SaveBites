@@ -15,3 +15,10 @@ class Recipe:
 	tags: Set[str]
 	#Nutrition info(optional filled later by USDA API)
 	nutrition: Dict[str,float] | None = None
+	def __init__(self, title, ingredients, cook_minutes, price_estimate_usd, cuisine, tags):
+		self.title = title
+		self.ingredients = ingredients
+		self.cook_minutes = cook_minutes
+		self.price_estimate_usd = price_estimate_usd
+		self.cuisine = cuisine
+		self.tags = tags
