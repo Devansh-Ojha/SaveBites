@@ -22,3 +22,4 @@ class Recipe:
 		self.price_estimate_usd = price_estimate_usd
 		self.cuisine = cuisine
 		self.tags = tags
+		self.id = -1 # placeholder	
