@@ -1,14 +1,16 @@
 from google import genai
 from google.genai import types
-from Recipes import Recipe
-from UserProfile import UserProfile
+from data_classes.Recipes import Recipe
+from data_classes.UserProfile import UserProfile
+
+import os
+api_key = os.getenv("GOOGLE_API_KEY")
 
 class Model():
 	# change this later
-	API_KEY = 
 
 	def __init__(self):
-		self.client = genai.Client(api_key=Model.API_KEY)
+		self.client = genai.Client(api_key=api_key)
 
 	def generate_recipe(self, UserProfile):
 		response = self.client.models.generate_content(
