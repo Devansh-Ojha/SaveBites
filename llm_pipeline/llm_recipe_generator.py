@@ -1,14 +1,16 @@
 from google import genai
 from google.genai import types
 from data_classes.UserProfile import UserProfile
+import json
+from data_classes.Recipes import Recipe
 
 class RecipeLLM:
     def __init__(self, api_key: str):
         self.client = genai.Client(api_key=api_key)
 
-    def build_user_prompt(self, user: UserProfile, num_recipes: int):
+    def build_user_prompt(self, user: UserProfile):
         prompt = f"""
-            You are a recipe generator. Create {num_recipes} recipes personalized for the following user:
+            You are a recipe generator. Create a recipe personalized for the following user:
             User ID: {user.user_id}
             Dietary Restrictions: {', '.join(user.dietary_restrictions) if user.dietary_restrictions else 'None'}
             Cuisine Preferences: {', '.join(user.cuisine_preferences) if user.cuisine_preferences else 'None'}
@@ -24,7 +26,7 @@ class RecipeLLM:
             - Only use listed appliances.
 
             Output format:
-            Each recipe should be a JSON object with the following structure:
+            The recipe should be a JSON object with the following structure:
             Title
             Ingredients: list of lists containing (name, quantity, unit)
             Instructions: list of strings (each string is a step)
@@ -33,12 +35,13 @@ class RecipeLLM:
             Cuisine Type
             Tags: list of strings (each string is a tag)
 
-            The response should be JSON objects for each recipe separated by semicolons and without markdown formatting.
+            The response should be a JSON object for each recipe separated by semicolons and without markdown formatting.
             """
         return prompt.strip()
 
-    def generate_recipes(self, user: UserProfile, num_recipes: int):
-        prompt = self.build_user_prompt(user, num_recipes)
+    def generate_recipes(self, user: UserProfile) -> Recipe:
+        prompt = self.build_user_prompt(user)
+        print("Thinking...")
         response = self.client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
@@ -46,4 +49,10 @@ class RecipeLLM:
                 thinking_config=types.ThinkingConfig(thinking_budget=0)
             ),
         )
-        return response.text
+        return self.parse_json(response.text)
+    
+    def parse_json(self, response) -> Recipe:
+        r = json.loads(response)
+        return Recipe(r["Title"], r["Ingredients"], r["Estimated Time"], r["Estimated Cost"], r["Cuisine Type"], r["Tags"])
+
+
