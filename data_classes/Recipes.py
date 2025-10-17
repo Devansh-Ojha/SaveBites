@@ -13,9 +13,11 @@ class Recipe:
 	price_estimate_usd = float
 	cuisine: str
 	tags: Set[str]
+	appliances: Set[str]
+	procedure: str
 	#Nutrition info(optional filled later by USDA API)
 	nutrition: Dict[str,float] | None = None
-	def __init__(self, title, ingredients, cook_minutes, price_estimate_usd, cuisine, tags):
+	def __init__(self, title, ingredients, cook_minutes, price_estimate_usd, cuisine, tags, appliances, procedure):
 		self.title = title
 		self.ingredients = ingredients
 		self.cook_minutes = cook_minutes
@@ -23,3 +25,5 @@ class Recipe:
 		self.cuisine = cuisine
 		self.tags = tags
 		self.recipe_id = "food" # placeholder	
+		self.appliances = appliances
+		self.procedure = procedure
