@@ -4,7 +4,7 @@ from skimage.transform import rotate
 import pytesseract as pyt
 import re
 
-img_path = "test_images/test_image9.png"
+img_path = "test_images/test_image20.png"
 
 # takes a path to an image and returns the image, converted to grayscale, as numpy array  
 def imageToGrayScale(input_path):
@@ -30,119 +30,179 @@ pyt.pytesseract.tesseract_cmd = r'/opt/homebrew/bin/tesseract'
 
 receipt_text = pyt.image_to_string('test_images/test_output.png')
 
-SKIP_WORDS = {"subtotal", "tax", "tip", "total", "balance", "change", "card", "cash", "tender"}
+print(receipt_text)
 
-def normalize(line: str) -> str:
-    # kill leader dots and collapse spaces; strip currency spaces like "$ 9.50"
-    line = re.sub(r"[.\·]{2,}", " ", line)
-    line = re.sub(r"\s{2,}", " ", line)
-    line = line.replace("$ ", "$").strip()
-    return line
 
-def parse_price(s: str) -> float:
-    # tolerant to OCR: commas, stray $
-    return float(s.replace("$", "").replace(",", "").replace("O", "0"))
+def split_line(string):
+    temp_quantity = 0
+    temp_ingredient = ''
+    ingredients = {}
+    line_array = []
 
-# ---------- Patterns (compiled once) ----------
-PATTERNS = [
-    # 1) qty prefix: "2 FILET MIGNON $98.00" or "2x FILET MIGNON $98.00"
-    ("qty_prefix", re.compile(
-        r"^\s*(?P<qty>\d+(?:\.\d+)?)\s*(?:x|X|\*)?\s+(?P<name>[A-Za-z][\w\s.&'/-]+?)\s+\$?(?P<total>-?[\d,]+\.\d{2})\s*$"
-    )),
-    # 2) qty suffix: "FILET MIGNON x2 $98.00"
-    ("qty_suffix", re.compile(
-        r"^(?P<name>[A-Za-z][\w\s.&'/-]+?)\s*(?:x|X|\*)\s*(?P<qty>\d+(?:\.\d+)?)\s+\$?(?P<total>-?[\d,]+\.\d{2})\s*$"
-    )),
-    # 3) qty @ unit: "ITEM 2 @ 0.99 ... 1.98" (total optional)
-    ("qty_at_unit", re.compile(
-        r"^(?P<name>[A-Za-z][\w\s.&'/-]+?)\s+(?P<qty>\d+(?:\.\d+)?)\s*@\s*\$?(?P<unit>[\d,]+\.\d{2})(?:.*?\$?(?P<total>-?[\d,]+\.\d{2}))?\s*$"
-    )),
-    # 4) weighted produce: "APPLES 1.23 lb @ 1.99/lb ... 2.45"
-    ("weighted", re.compile(
-        r"^(?P<name>[A-Za-z][\w\s.&'/-]+?)\s+(?P<qty>\d+(?:\.\d+)?)\s*(?:lb|lbs|kg)\s*@\s*\$?(?P<unit>[\d,]+\.\d{2})\s*(?:/?(?:lb|lbs|kg))?(?:.*?\$?(?P<total>-?[\d,]+\.\d{2}))?\s*$",
-        re.IGNORECASE
-    )),
-    # 5) name + price at end: "MILK ... 3.49" → qty=1
-    ("name_price", re.compile(
-        r"^(?P<name>[A-Za-z][\w\s.&'/-]+?)\s+\$?(?P<total>-?[\d,]+\.\d{2})\s*$"
-    )),
-    # 6) price then name (rare): "$3.49 MILK"
-    ("price_name", re.compile(
-        r"^\$?(?P<total>-?[\d,]+\.\d{2})\s+(?P<name>[A-Za-z][\w\s.&'/-]+?)\s*$"
-    )),
-]
+    for line in string.split('\n'): # Splits big ass text into individual lines
+        if re.compile(r"^([\w\s.&'-]+?)\s+.*?([\d,]+\.\d{2})$").match(line): # if line follows format, append
+            line_array.append(line)
 
-# Continuation line like: "2 @ 0.99 ... 1.98"
-CONT_LINE = re.compile(
-    r"^\s*(?P<qty>\d+(?:\.\d+)?)\s*@\s*\$?(?P<unit>[\d,]+\.\d{2})(?:.*?\$?(?P<total>-?[\d,]+\.\d{2}))?\s*$"
-)
+    for curr in line_array: # go through each line appended
+        temp_ingredient = ''
+        temp_quantity = 0
+        for item in curr.split(' '): # splits line by space, so now it is its own array
+            if re.compile(r"([\d]+)[A-Za-z]").match(item): #checks if item is a digit(s) followed by single letter
+              temp_quantity = re.findall(r"([\d]+)[A-Za-z]", item) #sets temp_quantity to the captured digits
+            if item.isdigit(): # checks if item is entirely digits, won't override, since 1x is a string, not digit
+                temp_quantity = int(item) #sets temp_quantity to item
+            elif item.isalpha(): # if item is only alphabet characters
+                temp_ingredient = temp_ingredient + item + ' ' #update igredient variable, accounts for multi word ingredients
+        ingredients.update({temp_ingredient: temp_quantity}) # add to the dictionary
 
-def parse_receipt_text(text: str):
-    items = []
-    last_item = None
+    print(line_array)
+    print(ingredients)
 
-    for raw in text.splitlines():
-        line = normalize(raw)
-        if not line:
-            continue
-        if any(w in line.lower() for w in SKIP_WORDS):
-            last_item = None
-            continue
+split_line(receipt_text)
 
-        matched = False
-        for kind, pat in PATTERNS:
-            m = pat.match(line)
-            if not m:
-                continue
 
-            name = m.group("name").strip()
-            qty = float(m.group("qty")) if m.groupdict().get("qty") else 1.0
-            total = parse_price(m.group("total")) if m.groupdict().get("total") else None
-            unit = parse_price(m.group("unit")) if m.groupdict().get("unit") else None
+grocery_items = []
+# Compile the regex pattern for efficiency. See the breakdown above for an explanation.
+item_pattern = re.compile(r"^([\w\s.&'-]+?)\s+.*?([\d,]+\)")
 
-            # Compute total if missing for qty@unit/weighted
-            if total is None and unit is not None:
-                total = round(qty * unit, 2)
+# Process the raw text line by line
+for line in receipt_text.split('\n'):
+    # Search for a match in the current line
+    match = item_pattern.match(line)
+    
+    # If a line matches the item pattern...
+    if match:
+        # Extract the item name (Group 1) and price (Group 2) and remove extra whitespace
+        item_name = match.group(1).strip()
+        quantity = match.group(2).strip()
+        
+        # Filter out common non-item keywords to avoid false positives
+        if "total" not in item_name.lower() and "tax" not in item_name.lower():
+            grocery_items.append({"item": item_name, "quantity": quantity})
 
-            # Ensure ints where appropriate (e.g., "2" not "2.0")
-            qty = int(qty) if qty.is_integer() else qty
+# --- 4. Final Output ---
+print("Extracted Grocery Items:")
+for item in grocery_items:
+    print(f"- {item['item']}: ${item['quantity']}")
 
-            items.append({
-                "item": name,
-                "quantity": qty,
-                "unit_price": unit if unit is not None else None,
-                "line_total": total
-            })
-            last_item = items[-1]
-            matched = True
-            break
 
-        if matched:
-            continue
+# SKIP_WORDS = {"subtotal", "tax", "tip", "total", "balance", "change", "card", "cash", "tender"}
 
-        # Try continuation for the previous line (e.g., previous line was just the name)
-        m = CONT_LINE.match(line)
-        if m and last_item is not None and last_item.get("unit_price") is None:
-            qty = float(m.group("qty"))
-            unit = parse_price(m.group("unit"))
-            total = parse_price(m.group("total")) if m.group("total") else round(qty * unit, 2)
-            last_item["quantity"] = int(qty) if qty.is_integer() else qty
-            last_item["unit_price"] = unit
-            last_item["line_total"] = total
-            continue
+# def normalize(line: str) -> str:
+#     # kill leader dots and collapse spaces; strip currency spaces like "$9.50"
+#     line = re.sub(r"[.\·]{2,}", " ", line)
+#     line = re.sub(r"\s{2,}", " ", line)
+#     line = line.replace("$ ", "$").strip()
+#     return line
 
-        # If nothing matched, reset continuation chain
-        last_item = None
+# def parse_price(s: str) -> float:
+#     # tolerant to OCR: commas, stray $
+#     return float(s.replace("$", "").replace(",", "").replace("O", "0"))
 
-    # Optional: drop None fields for cleanliness
-    for it in items:
-        if it["unit_price"] is None:
-            del it["unit_price"]
-    return items
+# # ---------- Patterns (compiled once) ----------
+# PATTERNS = [
+#     # 1) qty prefix: "2 FILET MIGNON $98.00" or "2x FILET MIGNON $98.00"
+#     ("qty_prefix", re.compile(
+#         r"^\s*(?P<qty>\d+(?:\.\d+)?)\s*(?:x|X|\*)?\s+(?P<name>[A-Za-z][\w\s.&'/-]+?)\s+\$?(?P<total>-?[\d,]+\.\d{2})\s*$"
+#     )),
+#     # 2) qty suffix: "FILET MIGNON x2 $98.00"
+#     ("qty_suffix", re.compile(
+#         r"^(?P<name>[A-Za-z][\w\s.&'/-]+?)\s*(?:x|X|\*)\s*(?P<qty>\d+(?:\.\d+)?)\s+\$?(?P<total>-?[\d,]+\.\d{2})\s*$"
+#     )),
+#     # 3) qty @ unit: "ITEM 2 @ 0.99 ... 1.98" (total optional)
+#     ("qty_at_unit", re.compile(
+#         r"^(?P<name>[A-Za-z][\w\s.&'/-]+?)\s+(?P<qty>\d+(?:\.\d+)?)\s*@\s*\$?(?P<unit>[\d,]+\.\d{2})(?:.*?\$?(?P<total>-?[\d,]+\.\d{2}))?\s*$"
+#     )),
+#     # 4) weighted produce: "APPLES 1.23 lb @ 1.99/lb ... 2.45"
+#     ("weighted", re.compile(
+#         r"^(?P<name>[A-Za-z][\w\s.&'/-]+?)\s+(?P<qty>\d+(?:\.\d+)?)\s*(?:lb|lbs|kg)\s*@\s*\$?(?P<unit>[\d,]+\.\d{2})\s*(?:/?(?:lb|lbs|kg))?(?:.*?\$?(?P<total>-?[\d,]+\.\d{2}))?\s*$",
+#         re.IGNORECASE
+#     )),
+#     # 5) name + price at end: "MILK ... 3.49" → qty=1
+#     ("name_price", re.compile(
+#         r"^(?P<name>[A-Za-z][\w\s.&'/-]+?)\s+\$?(?P<total>-?[\d,]+\.\d{2})\s*$"
+#     )),
+#     # 6) price then name (rare): "$3.49 MILK"
+#     ("price_name", re.compile(
+#         r"^\$?(?P<total>-?[\d,]+\.\d{2})\s+(?P<name>[A-Za-z][\w\s.&'/-]+?)\s*$"
+#     )),
+# ]
 
-items = parse_receipt_text(receipt_text)
-for it in items:
-    if "unit_price" in it:
-        print(f"{it['item']} x{it['quantity']} @ ${it['unit_price']:.2f}")
-    else:
-        print(f"{it['item']} x{it['quantity']}")
+# # Continuation line like: "2 @ 0.99 ... 1.98"
+# CONT_LINE = re.compile(
+#     r"^\s*(?P<qty>\d+(?:\.\d+)?)\s*@\s*\$?(?P<unit>[\d,]+\.\d{2})(?:.*?\$?(?P<total>-?[\d,]+\.\d{2}))?\s*$"
+# )
+
+# def parse_receipt_text(text: str):
+#     items = []
+#     last_item = None
+
+#     for raw in text.splitlines():
+#         line = normalize(raw)
+#         if not line:
+#             continue
+#         if any(w in line.lower() for w in SKIP_WORDS):
+#             last_item = None
+#             continue
+
+#         matched = False
+#         for kind, pat in PATTERNS:
+#             m = pat.match(line)
+#             if not m:
+#                 continue
+
+#             name = m.group("name").strip()
+#             qty = float(m.group("qty")) if m.groupdict().get("qty") else 1.0
+#             total = parse_price(m.group("total")) if m.groupdict().get("total") else None
+#             unit = parse_price(m.group("unit")) if m.groupdict().get("unit") else None
+
+#             # Compute total if missing for qty@unit/weighted
+#             if total is None and unit is not None:
+#                 total = round(qty * unit, 2)
+
+#             # Ensure ints where appropriate (e.g., "2" not "2.0")
+#             qty = int(qty) if qty.is_integer() else qty
+
+#             items.append({
+#                 "item": name,
+#                 "quantity": qty,
+#                 "unit_price": unit if unit is not None else None,
+#                 "line_total": total
+#             })
+#             last_item = items[-1]
+#             matched = True
+#             break
+
+#         if matched:
+#             continue
+
+#         # Try continuation for the previous line (e.g., previous line was just the name)
+#         m = CONT_LINE.match(line)
+#         if m and last_item is not None and last_item.get("unit_price") is None:
+#             qty = float(m.group("qty"))
+#             unit = parse_price(m.group("unit"))
+#             total = parse_price(m.group("total")) if m.group("total") else round(qty * unit, 2)
+#             last_item["quantity"] = int(qty) if qty.is_integer() else qty
+#             last_item["unit_price"] = unit
+#             last_item["line_total"] = total
+#             continue
+
+#         # If nothing matched, reset continuation chain
+#         last_item = None
+
+#     # Optional: drop None fields for cleanliness
+#     for it in items:
+#         if it["unit_price"] is None:
+#             del it["unit_price"]
+#     return items
+
+# print(receipt_text)
+# with open('rawtext.txt', 'w', encoding='unicode-escape') as f:
+#     f.write(receipt_text)
+
+# items = parse_receipt_text(receipt_text)
+# for it in items:
+#     if "unit_price" in it:
+#         print(f"{it['item']} x{it['quantity']} @ ${it['unit_price']:.2f}")
+#     else:
+#         print(f"{it['item']} x{it['quantity']}")
