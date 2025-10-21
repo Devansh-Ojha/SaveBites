@@ -44,9 +44,9 @@ class UserProfile():
         def change_budget(set_or_increase_or_decrease, number):
             if set_or_increase_or_decrease == "set":
                 budget = number
-            if set_or_increase_or_decrease == "increase":
+            elif set_or_increase_or_decrease == "increase":
                 budget += number
-            if set_or_increase_or_decrease == "decrease":
+            elif set_or_increase_or_decrease == "decrease":
                 budget -= number
         def set_time(time):
             self.time_available = time
