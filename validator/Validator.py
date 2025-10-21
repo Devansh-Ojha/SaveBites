@@ -33,6 +33,10 @@ class Validator:
             response = self.recipe_llm.client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=regen_prompt,
+                config=types.GenerateContentConfig(
+                    responseMimeType="application/json",
+                    thinking_config=types.ThinkingConfig(thinking_budget=0)
+                ),
             )
 
             new_recipes = self.recipe_llm.parse_json(response.text)
