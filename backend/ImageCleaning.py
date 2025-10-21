@@ -3,87 +3,128 @@ from deskew import determine_skew
 from skimage.transform import rotate
 import pytesseract as pyt
 import re
+import numpy as np
+import requests
 
-img_path = "test_images/test_image20.png"
+# path to receipt image
+img_path = "test_images/test_image24.png"
 
 # takes a path to an image and returns the image, converted to grayscale, as numpy array  
 def imageToGrayScale(input_path):
     img = cv.imread(input_path)
     return cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
-# takes an image and adjusts the contrast for readability
-def contrast(img):
-    _, thresh_image = cv.threshold(img, 150, 255, cv.THRESH_BINARY)
-    return thresh_image
+# measure sharpness of image using variance. if the variance is high, edges are clear so don't apply a blur.
+# if variance is low, image is slightly out of focus, apply a blur to remove noise
+def blur(gray):
+    sharp = cv.Laplacian(gray, cv.CV_64F).var()
+    if sharp > 150:          # tune 80–150 range for your set
+        return gray          # no blur
+    return cv.GaussianBlur(gray, (3,3), 0)
 
-# takes a path to an image, converts it to grayscale and increases contrast, then returns deskewed image
-def unskew(infile):
-    clean_image = contrast(imageToGrayScale(infile))
-    angle = determine_skew(clean_image)
-    rotated = rotate(clean_image, angle, resize=True) * 255
-    cv.imwrite("test_images/test_output.png", rotated)
+PSM = " --psm 6" # Page Segmentation Mode -> 6 is uniform block of text
+OEM = " --oem 3" # OCR Engine Mode -> 3 is default
 
-unskew(img_path)
+# applies otsu threshold rather than simple threshold to determine threshold value automatically
+def otsu_contrast(gray):
+    _, th = cv.threshold(gray, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    return th
+
+# cleans the image, by applying previous methods
+def clean_image(infile):
+    gray = imageToGrayScale(infile) # convert image to gray scale
+    gray = blur(gray) # apply blur if needed
+    gray = cv.bilateralFilter(gray, d=9, sigmaColor=50, sigmaSpace=50) # smooths noise, while preserving edges
+
+    angle = determine_skew(gray) # determines the tilt of the text as an angle
+     # rotates image based on the calculated angle
+    rotated_gray = (rotate(gray, angle, resize=True) * 255).astype(np.uint8)
+
+    # applies the otsu contrast threshold to automatically decide thresholds per pixel rather than hard coding a value
+    final = otsu_contrast(rotated_gray)
+    cv.imwrite("test_images/test_output.png", final) # puts the final image in test_output.png
+    return final
 
 # If you don't have tesseract executable in your PATH, include the following:
 pyt.pytesseract.tesseract_cmd = r'/opt/homebrew/bin/tesseract'
 
-receipt_text = pyt.image_to_string('test_images/test_output.png')
+# searches the usda database for the word, returns True if it finds a result for the food, False otherwise
+def is_food_usda(name: str, api_key: str, min_score: int = 50) -> bool:
+    url = "https://api.nal.usda.gov/fdc/v1/foods/search"
+    params = {"api_key": api_key, "query": name, "pageSize": 5}
+    r = requests.get(url, params=params, timeout=5)
+    if r.status_code != 200:
+        return False
+    data = r.json()
+    foods = data.get("foods", [])
+    return any(f.get("description") for f in foods)
 
-print(receipt_text)
-
-
+# takes the entire receipt text and extracts the ingredients and their quantities
 def split_line(string):
-    temp_quantity = 0
-    temp_ingredient = ''
+    # common words on a receipt to ignore
+    skip_words = [
+                    "tax ", "tip ", "subtotal ", "total ", "am ", "pm ",
+                    "address ", "terminal ", "table ", "check ", "date ", "amount ",
+                    "amt ", "balance ", "tab ", "trace ", "admin ", "fee "
+                 ]
+    
+    quant = 0
+    ing = ''
     ingredients = {}
     line_array = []
 
     for line in string.split('\n'): # Splits big ass text into individual lines
-        if re.compile(r"^([\w\s.&'-]+?)\s+.*?([\d,]+\.\d{2})$").match(line): # if line follows format, append
+        if re.compile(r"^(?=.*\b\d+(?:\.\d+)?\b)(?=.*[A-Za-z]).+$").match(line): # if line follows format, append
             line_array.append(line)
 
     for curr in line_array: # go through each line appended
-        temp_ingredient = ''
-        temp_quantity = 0
+        ing = ''
+        quant = 0
         for item in curr.split(' '): # splits line by space, so now it is its own array
-            if re.compile(r"([\d]+)[A-Za-z]").match(item): #checks if item is a digit(s) followed by single letter
-              temp_quantity = re.findall(r"([\d]+)[A-Za-z]", item) #sets temp_quantity to the captured digits
             if item.isdigit(): # checks if item is entirely digits, won't override, since 1x is a string, not digit
-                temp_quantity = int(item) #sets temp_quantity to item
+                quant = int(item) #sets temp_quantity to item
             elif item.isalpha(): # if item is only alphabet characters
-                temp_ingredient = temp_ingredient + item + ' ' #update igredient variable, accounts for multi word ingredients
-        ingredients.update({temp_ingredient: temp_quantity}) # add to the dictionary
+                ing = ing + item + ' ' #update igredient variable, accounts for multi word ingredients
+        #check usda food database for the item to see if it is a food
+        if is_food_usda(ing, "vZDvIaXQVQfrSUV2rPsvfhBNtcvMhvdPj1CjOhQw"):
+            for word in skip_words: 
+                # check if the any of the words to skip are in the item or vice versa, check that the quantity is reasonable
+                if (word in ing.lower()) or (quant > 100) or (quant <= 0) or ing == "":
+                    break
+            else:
+                ingredients.update({ing.lower(): quant}) # append to ingredients
+            
 
-    print(line_array)
-    print(ingredients)
+    print(ingredients) # debug statement
 
+clean_image(img_path)
+receipt_text = pyt.image_to_string('test_images/test_output.png')
 split_line(receipt_text)
 
 
-grocery_items = []
-# Compile the regex pattern for efficiency. See the breakdown above for an explanation.
-item_pattern = re.compile(r"^([\w\s.&'-]+?)\s+.*?([\d,]+\)")
+# grocery_items = []
+# # Compile the regex pattern for efficiency. See the breakdown above for an explanation.
+# item_pattern = re.compile(r"^([\w\s.&'-]+?)\s+.*?([\d,]+\.\d{2})$")
 
-# Process the raw text line by line
-for line in receipt_text.split('\n'):
-    # Search for a match in the current line
-    match = item_pattern.match(line)
+# # Process the raw text line by line
+# for line in receipt_text.split('\n'):
+#     # Search for a match in the current line
+#     match = item_pattern.match(line)
     
-    # If a line matches the item pattern...
-    if match:
-        # Extract the item name (Group 1) and price (Group 2) and remove extra whitespace
-        item_name = match.group(1).strip()
-        quantity = match.group(2).strip()
+#     # If a line matches the item pattern...
+#     if match:
+#         # Extract the item name (Group 1) and price (Group 2) and remove extra whitespace
+#         item_name = match.group(1).strip()
+#         quantity = match.group(2).strip()
         
-        # Filter out common non-item keywords to avoid false positives
-        if "total" not in item_name.lower() and "tax" not in item_name.lower():
-            grocery_items.append({"item": item_name, "quantity": quantity})
+#         # Filter out common non-item keywords to avoid false positives
+#         if "total" not in item_name.lower() and "tax" not in item_name.lower():
+#             grocery_items.append({"item": item_name, "quantity": quantity})
 
-# --- 4. Final Output ---
-print("Extracted Grocery Items:")
-for item in grocery_items:
-    print(f"- {item['item']}: ${item['quantity']}")
+# # --- 4. Final Output ---
+# print("Extracted Grocery Items:")
+# for item in grocery_items:
+#     print(f"- {item['item']}: ${item['quantity']}")
 
 
 # SKIP_WORDS = {"subtotal", "tax", "tip", "total", "balance", "change", "card", "cash", "tender"}
