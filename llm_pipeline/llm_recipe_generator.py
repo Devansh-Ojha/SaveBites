@@ -36,6 +36,7 @@ class RecipeLLM:
             Tags: list of strings (each string is a tag)
 
             The response should be a JSON object for each recipe separated by semicolons and without markdown formatting.
+            
             """
         return prompt.strip()
 
@@ -46,13 +47,15 @@ class RecipeLLM:
             model="gemini-2.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
+                responseMimeType="application/json",
                 thinking_config=types.ThinkingConfig(thinking_budget=0)
             ),
         )
-        return self.parse_json(response.text)
+        print(response.text)
+        print(self.parse_json(response.text))
     
     def parse_json(self, response) -> Recipe:
         r = json.loads(response)
-        return Recipe(r["Title"], r["Ingredients"], r["Estimated Time"], r["Estimated Cost"], r["Cuisine Type"], r["Tags"])
+        return Recipe(r["Title"], r["Ingredients"], r["Estimated Time"], r["Estimated Cost"], r["Cuisine Type"], r["Tags"], "", "")
 
 
