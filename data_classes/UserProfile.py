@@ -30,10 +30,33 @@ class UserProfile():
         self.time_available = int(time_available)
         # set ()
         self.appliances = set(appliances)
-
-        # """""totally optional but we can also record the ratings of the recipes from the user""""
         self.recipe_ratings: Dict[str, float] = {}
-
+        def change_restrictions(add_or_remove, restriction):
+            if add_or_remove == "add":
+                self.dietary_restrictions.add(restriction)
+            elif add_or_remove == "remove" and restriction in self.dietary_restrictions:
+                self.dietary_restrictions.remove(restriction)
+        def change_preferences(add_or_remove, preference):
+            if add_or_remove == "add":
+                self.cuisine_preferences += [preference]
+            elif add_or_remove == "remove" and preference in self.cuisine_preferences:
+                self.cuisine_preferences.remove(preference)
+        def change_budget(set_or_increase_or_decrease, number):
+            if set_or_increase_or_decrease == "set":
+                budget = number
+            if set_or_increase_or_decrease == "increase":
+                budget += number
+            if set_or_increase_or_decrease == "decrease":
+                budget -= number
+        def set_time(time):
+            self.time_available = time
+        def change_appliances(add_or_remove, appliance):
+            if add_or_remove == "add":
+                self.appliances.add(appliance)
+            elif add_or_remove == "remove" and appliance in self.appliances:
+                self.appliances.remove(appliance)
+        def rate_recipe(recipe, rating):
+            self.recipe_ratings[recipe] = rating
         """"might not need these because we are making a userpantry.py"""""
 
          
