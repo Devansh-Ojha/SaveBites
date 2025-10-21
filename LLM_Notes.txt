@@ -10,7 +10,7 @@ Appliances available
 Past ratings/reviews of recipes
 
 Can we get an api key?
-LLM Testing https://colab.research.google.com/drive/1Q1fSEu1tpQWJ401TyEm2ZkH2p2sjWQph?usp=sharing 
+
 
 Pantry Database
 Ingredients currently available
