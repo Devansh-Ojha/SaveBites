@@ -1,0 +1,16 @@
+Structure:
+    - Frontend connects to API 
+    - Ingredients pulled from internet connects to API
+    - Recipes spewed from LLM team connects to API 
+
+Questions for tuesday 10/17/25:
+    1. Why are we handling nutritional facts?
+       Shouldn't nutritional facts be based on the recipes rather than individual ingredients?
+       Different methods of cooking can change the nutition of different ingredients, we 
+       shouldn't be giving nutritional facts of ingredients before they are cooked.
+
+OCR Things to Consider:
+    1. Quantities below ingredients
+    2. Quantities followed by 'x'
+    3. Need to change auto contrast
+    4. Disregard tax, subtotal, anything non ingredient
