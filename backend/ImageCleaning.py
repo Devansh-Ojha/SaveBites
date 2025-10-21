@@ -5,9 +5,18 @@ import pytesseract as pyt
 import re
 import numpy as np
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    raise RuntimeError("Missing API_KEY. Put it in a .env file in the project root.")
+
 
 # path to receipt image
-img_path = "test_images/test_image24.png"
+img_path = "test_images/test_image9.png"
 
 # takes a path to an image and returns the image, converted to grayscale, as numpy array  
 def imageToGrayScale(input_path):
@@ -86,7 +95,7 @@ def split_line(string):
             elif item.isalpha(): # if item is only alphabet characters
                 ing = ing + item + ' ' #update igredient variable, accounts for multi word ingredients
         #check usda food database for the item to see if it is a food
-        if is_food_usda(ing, "vZDvIaXQVQfrSUV2rPsvfhBNtcvMhvdPj1CjOhQw"):
+        if is_food_usda(ing, API_KEY):
             for word in skip_words: 
                 # check if the any of the words to skip are in the item or vice versa, check that the quantity is reasonable
                 if (word in ing.lower()) or (quant > 100) or (quant <= 0) or ing == "":
