@@ -18,3 +18,13 @@ class Ranker:
         cuisine_score = 0
       elif cuisine_score != -1:
         cuisine_score = len(user_profile.cuisine_preferences) - cuisine_score
+      budget_score = user_profile.budget_usd - recipe.price_estimate_usd)
+      time_score = profile.time_available - recipe.cook_minutes
+      a = 1
+      b = 1
+      c = 1
+      recipe_score = (a * cuisine_score) + (b * budget_score) + (c * time_score)
+      ranking[recipe] = recipe_score
+      sorted_ranking = [rank for rank in ranking]
+      sorted_ranking.sort(key=lambda x: ranking[x])
+    return sorted_ranking
