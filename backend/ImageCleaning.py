@@ -16,7 +16,28 @@ if not API_KEY:
 
 
 # path to receipt image
-img_path = "test_images/test_image9.png"
+img_path = "test_images/test_image28.png"
+
+
+# common words on a receipt to ignore
+skip_words = [
+                "tax ", "tip ", "subtotal ", "total ", "am ", "pm ",
+                "address ", "terminal ", "table ", "check ", "date ", "amount ",
+                "amt ", "balance ", "tab ", "trace ", "admin ", "fee ", "the ", 
+                "item ", "items ", "sold ", "cash ", "card ", "credit ", "debit ", 
+                "visa ", "mastercard ", "amex ", "discover ", "feedback ", "rewards program ",
+                "auth ", "approval ", "aid ", "emv ", "contactless ", "swipe ", "tap ",
+                "pin ", "signature ", "merchant copy ", "customer copy ", "change ", "balance ",
+                "subtotal ", "sales tax ", "rounding ", "due ", "amount due ",
+                "cash back ", "gratuity ", "fee ", "surcharge ",
+                "coupon ", "mfr ", "manufacturer ", "loyalty ", "reward ", "rewards ", "points ",
+                "promo ", "discount ", "bogo ", "member price ", "savings ",
+                "order ", "trans ", "txn ", "transaction ", "invoice ", "ref ",
+                "terminal ", "register ", "reg ", "cashier ", "assoc ", "operator ", "batch ",
+                "app ", "app code ", "store ", "lock ", "drawer ", "lane ",
+                "market ", "grocery ", "supermarket ", "store ", "pharmacy ",
+                "thank you ", "come again ", "survey "
+             ]
 
 # takes a path to an image and returns the image, converted to grayscale, as numpy array  
 def imageToGrayScale(input_path):
@@ -30,9 +51,6 @@ def blur(gray):
     if sharp > 150:          # tune 80–150 range for your set
         return gray          # no blur
     return cv.GaussianBlur(gray, (3,3), 0)
-
-PSM = " --psm 6" # Page Segmentation Mode -> 6 is uniform block of text
-OEM = " --oem 3" # OCR Engine Mode -> 3 is default
 
 # applies otsu threshold rather than simple threshold to determine threshold value automatically
 def otsu_contrast(gray):
@@ -68,21 +86,31 @@ def is_food_usda(name: str, api_key: str, min_score: int = 50) -> bool:
     foods = data.get("foods", [])
     return any(f.get("description") for f in foods)
 
+def decide_receipt_format(string):
+    lines = receipt_text.splitlines()
+    format1regex = re.compile(r"^(?=.*\b\d+(?:\.\d+)?\b)(?=.*[A-Za-z]).+$")
+    format2regex = re.compile(r"^([A-Za-z\s]+).*(\d+\.\d{2})")
+    # endsInPriceRegex = re.compile(r"(\d+\.\d{2})$")
+    for line in lines:
+        # endsInPriceRegex.match(line)
+        if  all([0 for word in skip_words if word in line]) and is_food_usda(line, API_KEY):
+            #checks same line format
+            if format1regex.match(line):
+                return item_quant_on_same_line_format(string)
+            elif format2regex.match(line):
+                print ("We know now")
+                return no_quantity_format(string)
+            # elif "@" in line:
+                
+
+
 # takes the entire receipt text and extracts the ingredients and their quantities
-def split_line(string):
-    # common words on a receipt to ignore
-    skip_words = [
-                    "tax ", "tip ", "subtotal ", "total ", "am ", "pm ",
-                    "address ", "terminal ", "table ", "check ", "date ", "amount ",
-                    "amt ", "balance ", "tab ", "trace ", "admin ", "fee "
-                 ]
-    
+def item_quant_on_same_line_format(string):
     quant = 0
-    ing = ''
     ingredients = {}
     line_array = []
 
-    for line in string.split('\n'): # Splits big ass text into individual lines
+    for line in string.splitlines(): # Splits big ass text into individual lines
         if re.compile(r"^(?=.*\b\d+(?:\.\d+)?\b)(?=.*[A-Za-z]).+$").match(line): # if line follows format, append
             line_array.append(line)
 
@@ -101,14 +129,37 @@ def split_line(string):
                 if (word in ing.lower()) or (quant > 100) or (quant <= 0) or ing == "":
                     break
             else:
-                ingredients.update({ing.lower(): quant}) # append to ingredients
+                ingredients.update({ing.lower(): (ingredients.get(ing.lower(), 0) + quant, "")}) # append to ingredients
             
-
     print(ingredients) # debug statement
+
+def no_quantity_format(string):
+    line_array = []
+    ingredients = {}    
+    for line in string.split('\n'):
+        print(line + string(re.compile(r"^([A-Za-z\s]+).*(\d+\.\d{2})").match(line)))
+        if re.compile(r"^([A-Za-z\s]+).*(\d+\.\d{2})").match(line):
+            print(line)
+            line_array.append(line)
+    
+    for curr in line_array:
+        ing = ''
+        for item in curr.split(' '):
+            if item.isalpha():
+                ing = ing + item + ' '
+        if is_food_usda(ing, API_KEY):
+            for word in skip_words:
+                if (word in ing.lower()) or ing == "":
+                    break
+            else:
+                ingredients.update({ing.lower(): ingredients.get(ing.lower(), 0) + 1})
+
+    print(ingredients)
 
 clean_image(img_path)
 receipt_text = pyt.image_to_string('test_images/test_output.png')
-split_line(receipt_text)
+print(receipt_text)
+decide_receipt_format(receipt_text)
 
 
 # grocery_items = []
