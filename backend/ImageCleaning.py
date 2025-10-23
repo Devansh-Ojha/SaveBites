@@ -1,5 +1,4 @@
 import cv2 as cv
-from deskew import determine_skew
 from skimage.transform import rotate
 import pytesseract as pyt
 import re
@@ -7,6 +6,7 @@ import numpy as np
 import requests
 import os
 from dotenv import load_dotenv
+from deskew import determine_skew
 
 load_dotenv()
 
@@ -16,14 +16,14 @@ if not API_KEY:
 
 
 # path to receipt image
-img_path = "test_images/test_image24.png"
+img_path = "test_images/test_image22.png"
 
 
 # common words on a receipt to ignore
 skip_words = [
                 "tax ", "tip ", "subtotal ", "total ", "am ", "pm ",
                 "address ", "terminal ", "table ", "check ", "date ", "amount ",
-                "amt ", "balance ", "tab ", "trace ", "admin ", "fee ", "the ", 
+                "amt ", "balance ", "tab ", "trace ", "admin ", "fee ", 
                 "item ", "items ", "sold ", "cash ", "card ", "credit ", "debit ", 
                 "visa ", "mastercard ", "amex ", "discover ", "feedback ", "rewards program ",
                 "auth ", "approval ", "aid ", "emv ", "contactless ", "swipe ", "tap ",
@@ -79,7 +79,7 @@ pyt.pytesseract.tesseract_cmd = r'/opt/homebrew/bin/tesseract'
 def is_food_usda(name: str, api_key: str, min_score: int = 50) -> bool:
     url = "https://api.nal.usda.gov/fdc/v1/foods/search"
     params = {"api_key": api_key, "query": name, "pageSize": 5}
-    r = requests.get(url, params=params, timeout=5)
+    r = requests.get(url, params=params, timeout=10)
     if r.status_code != 200:
         return False
     data = r.json()
