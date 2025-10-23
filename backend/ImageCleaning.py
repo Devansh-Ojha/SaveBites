@@ -16,7 +16,7 @@ if not API_KEY:
 
 
 # path to receipt image
-img_path = "test_images/test_image28.png"
+img_path = "test_images/test_image24.png"
 
 
 # common words on a receipt to ignore
@@ -131,7 +131,7 @@ def item_quant_on_same_line_format(string):
             else:
                 ingredients.update({ing.lower(): (ingredients.get(ing.lower(), 0) + quant, "")}) # append to ingredients
             
-    print(ingredients) # debug statement
+    return ingredients
 
 def no_quantity_format(string):
     line_array = []
@@ -154,12 +154,30 @@ def no_quantity_format(string):
             else:
                 ingredients.update({ing.lower(): ingredients.get(ing.lower(), 0) + 1})
 
-    print(ingredients)
+    return ingredients
+
+# converts the hash map to a table, just for demonstration purposes
+def show_data_as_table(dictionary):
+    rows = []
+    for name, (qty, unit) in dictionary.items():
+        ingredient = name.strip()                  # remove trailing space
+        qty_str = f"{qty} {unit}".strip()          # hide unit if empty
+        rows.append((ingredient, qty_str))
+
+    # Column widths
+    w1 = max(len("Item"), *(len(r[0]) for r in rows)) if rows else len("Item")
+    w2 = max(len("Quantity"),  *(len(r[1]) for r in rows)) if rows else len("Quantity")
+
+    # Print table
+    print(f"{'Item':<{w1}} | {'Quantity':<{w2}}")
+    print(f"{'-'*w1}-+-{'-'*w2}")
+    for ing, q in rows:
+        print(f"{ing:<{w1}} | {q:<{w2}}")
 
 clean_image(img_path)
 receipt_text = pyt.image_to_string('test_images/test_output.png')
-print(receipt_text)
-decide_receipt_format(receipt_text)
+extracted_ingredients = decide_receipt_format(receipt_text)
+show_data_as_table(extracted_ingredients)
 
 
 # grocery_items = []
