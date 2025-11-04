@@ -1,9 +1,17 @@
+import hero from './hero.js';
+import Navbar from './Navbar.js';
 import logo from './logo.svg';
 import './App.css';
 
 function App() {
   return (
+    //hero
+   // about
+  // some other page that is being created
+    
     <div className="App">
+      <Navbar />
+      <hero />
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
@@ -18,6 +26,7 @@ function App() {
           Learn React
         </a>
       </header>
+      
     </div>
   );
 }
