@@ -1,33 +1,33 @@
-import hero from './hero.js';
+import Hero from './Hero.js';
 import Navbar from './Navbar.js';
+import Signup from './Signup.js';
 import logo from './logo.svg';
 import './App.css';
+import Login from './Login.js'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 function App() {
   return (
     //hero
    // about
   // some other page that is being created
-    
-    <div className="App">
-      <Navbar />
-      <hero />
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <Router>
+      <div className="App">
       
-    </div>
+        <Navbar />
+        <Hero />
+        <header className="App-header">
+          <p>
+          </p>
+        </header>
+        
+      </div>
+      <Routes>
+        <Route path="/" element={<Hero />}></Route>
+        <Route path="/login" element={<Login />}></Route>
+        <Route path="/signup" element={<Signup />}></Route>
+      </Routes>
+    </Router>
   );
 }
 
