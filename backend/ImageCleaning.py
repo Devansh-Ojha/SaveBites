@@ -16,7 +16,7 @@ if not API_KEY:
 
 
 # path to receipt image
-img_path = "test_images/test_image22.png"
+img_path = "test_images/test_image28.png"
 
 
 # common words on a receipt to ignore
@@ -98,8 +98,7 @@ def decide_receipt_format(string):
             if format1regex.match(line):
                 return item_quant_on_same_line_format(string)
             elif format2regex.match(line):
-                print ("We know now")
-                return no_quantity_format(string)
+                return no_quantity_format2(string)
             # elif "@" in line:
                 
 
@@ -156,6 +155,21 @@ def no_quantity_format(string):
 
     return ingredients
 
+def trader_joes_format(string):
+    line_array = []
+    ingredients = {}
+    print(string)    
+    for curr in string.split('\n'):
+        searchRegex = re.compile(r"([\D]+)\d*")
+        match = re.search(searchRegex, curr)
+        if match:
+            line = match.group(1)
+            for i in line.split(" "):
+                if is_food_usda(i, API_KEY):
+                    ingredients.update({line.lower(): (ingredients.get(line.lower(), (0, ""))[0] + 1, "")})
+                    break; 
+    return ingredients
+
 # converts the hash map to a table, just for demonstration purposes
 def show_data_as_table(dictionary):
     rows = []
@@ -177,7 +191,8 @@ def show_data_as_table(dictionary):
 clean_image(img_path)
 receipt_text = pyt.image_to_string('test_images/test_output.png')
 extracted_ingredients = decide_receipt_format(receipt_text)
-show_data_as_table(extracted_ingredients)
+#extracted_ingredients = trader_joes_format(receipt_text)
+#show_data_as_table(extracted_ingredients)
 
 
 # grocery_items = []
