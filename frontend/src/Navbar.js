@@ -17,6 +17,9 @@ export default function NavBar() {
 					<span style={{float: "right", margin: "10px"}}>
 						<Link to="/profile">Profile</Link>
 					</span>
+					<span style={{float: "right", margin: "10px"}}>
+						<Link to="/generate">Generate Recipes</Link>
+					</span>
 				</div>
 			</nav>
 		</>

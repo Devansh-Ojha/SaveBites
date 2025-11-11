@@ -3,9 +3,11 @@ import Navbar from './Navbar.js';
 import Signup from './Signup.js';
 import logo from './logo.svg';
 import './App.css';
-import Login from './Login.js'
-import UserProfile from './UserProfile.js'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Login from './Login.js';
+import UserProfile from './UserProfile.js';
+import Generate from './Generate.js';
+import Recipes from './Recipes.js';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
   return (
@@ -27,7 +29,9 @@ function App() {
         <Route path="/" element={<Hero />}></Route>
         <Route path="/login" element={<Login />}></Route>
         <Route path="/signup" element={<Signup />}></Route>
-        <Route path="/profile" element={<UserProfile name={"Test"}/>}></Route>
+        <Route path="/profile" element={<UserProfile name={"Tester"}/>}></Route>
+        <Route path="/generate" element={<Generate />}></Route>
+        <Route path="/recipes" element={<Recipes />}></Route>
       </Routes>
     </Router>
   );

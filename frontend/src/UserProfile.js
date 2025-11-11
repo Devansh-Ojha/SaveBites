@@ -1,4 +1,5 @@
 import { useReducer } from 'react';
+import { Link } from 'react-router-dom';
 
 function reducer(state, action) {
 	if (state == action.type) {
@@ -10,29 +11,11 @@ function reducer(state, action) {
 export default function UserProfile({name}) {
 	const [state, dispatch] = useReducer(reducer, "");
 
-	const testRecipes = ["hamburger", "rice"];
-	const testReviews = ["hamburger was good", "rice was dry"];
 	const testEmail = "somebody@example.com";
 	const testTheme = "Light Mode"
 
 	const elements = {
 		"": <div></div>,
-		"recipes": <div style={{float: "right", margin: "100px"}}>
-						Recipes:
-						<ul>
-							<li>{testRecipes[0]}</li>
-							<li>{testRecipes[1]}</li>
-						</ul>
-				
-					</div>,
-		"reviews": <div style={{float: "right", margin: "100px"}}>
-						Reviews:
-						<ul>
-							<li>{testReviews[0]}</li>
-							<li>{testReviews[1]}</li>
-						</ul>
-				
-					</div>,
 		"details": <div style={{float: "right", margin: "100px"}}>
 						Account Details:
 						<p>Email: {testEmail}</p>
@@ -47,42 +30,30 @@ export default function UserProfile({name}) {
 	}
 
 	return (
-		<>
+		<p style={{position: "relative", left: "50px"}}>
 			<h1>Hi {name}!</h1>
 
+			<Link style={{position: "absolute", top: "100px"}} to="/recipes">View Recipes and Reviews</Link>
+
 			<button style={{position: "absolute", top: "150px"}} onClick={() => {
-				dispatch({type: "recipes"})
-			}}>
-				View Saved Recipes
-			</button>
-
-			<button style={{position: "absolute", top: "200px"}} onClick={() => {
-				dispatch({type: "reviews"})
-			}}>
-				View Past Reviews
-			</button>
-
-			<button style={{position: "absolute", top: "250px"}} onClick={() => {
 				dispatch({type: "details"})
 			}}>
 				Account Details
 			</button>
 
-			<button style={{position: "absolute", top: "300px"}} onClick={() => {
+			<button style={{position: "absolute", top: "200px"}} onClick={() => {
 				dispatch({type: "settings"})
 			}}>
 				Settings and Preferences
 			</button>
 
-			<button style={{position: "absolute", top: "350px"}} onClick={() => {
+			<button style={{position: "absolute", top: "250px"}} onClick={() => {
 				dispatch({type: "help"})
 			}}>
 				Help and Support
 			</button>
 
 			{ elements[state] }
-			
-		
-		</>
+		</p>
 	)
 }
