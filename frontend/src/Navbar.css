@@ -4,9 +4,9 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  width: 100%;
+  width: 99.3%;
   height: 40px;
-  background: rgba(238, 245, 223, 0.95);
+  background: rgb(179, 199, 179);
   box-shadow: 0 4px 12px rgba(37, 49, 34, 0.08);
 }
 
