@@ -1,7 +1,6 @@
 import Hero from './Hero.js';
 import Navbar from './Navbar.js';
 import Signup from './Signup.js';
-import logo from './logo.svg';
 import './App.css';
 import Login from './Login.js';
 import UserProfile from './UserProfile.js';

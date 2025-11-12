@@ -1,0 +1,32 @@
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef5df;
+}
+
+.hero-content {
+  text-align: center;
+  color: rgb(106, 170, 106);
+  font-family: "Roboto", sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-title {
+  margin: 0;
+  font-size: 80px;
+  font-weight: 600;
+}
+
+.hero-subtitle {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 500;
+  color: rgb(106, 170, 106);
+}
+
+
