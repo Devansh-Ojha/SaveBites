@@ -1,4 +1,4 @@
-import Hero from './Hero.js';
+import Hero from './hero.js';
 import Navbar from './Navbar.js';
 import Signup from './Signup.js';
 import './App.css';
