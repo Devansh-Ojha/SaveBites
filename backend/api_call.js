@@ -242,8 +242,16 @@ const ingredients = new Map([
 
 // Routes
 // GET all ingredients
-app.get('/ingredients', (req, res) => {
-    res.json(Object.fromEntries(ingredients));
+app.get('/user-ingredients/:user', async (req, res) => {
+    try {
+        const { user : username } = req.params
+        const user = await UserProfile.findByUsername(username);
+        if (!user) return res.status(404).json({ error: "Could not find user" });
+        return res.status(200).json(user.ingredients);
+    } catch(error){
+        console.log(error)
+        return res.status(500).json({error: "Failed to fetch user"});
+    }
 });
 
 /*// Dummy API call for getting a recipe from LLM (sends a string on get)
