@@ -1,14 +1,17 @@
 import { useState } from 'react';
+//import preferences from './Preferences.js';
 
-export default function Generate() {
+export default function Generate({ cuisines }) {
 	const [recipes, setRecipes] = useState([]);
 
-	const testIngredients = ["Tomato", "Ground Beef", "Cheese", "Flour", "Herbs", "Egg", "Bell Peppers"]
-	const testCuisines = ["Italian", "American"]
+	// const testIngredients = Preferences.testIngredients;
+	// const testCuisines = Preferences.testCuisines;
+	const testIngredients = [];
+	const testCuisines = cuisines;
 
 	function generateRecipe() {
 		let testRecipe = {
-			ingredients: "Tomato, Cheese, Flour",
+			ingredients: "",
 			instructions: "Make pizza, put in oven",
 			appliances: "Oven",
 			budget: "10"

@@ -23,6 +23,9 @@ export default function UserProfile({name}) {
 		"settings": <div style={{float: "right", margin: "100px"}}>
 						Settings and Preferences:
 						<p>Theme: {testTheme}</p>
+						<Link to="/preferences">
+							Set Preferences
+						</Link>
 					</div>,
 		"help": <div style={{float: "right", margin: "100px"}}>
 						Help:
