@@ -33,7 +33,7 @@ export default function UserProfile({name}) {
 	}
 
 	return (
-		<p style={{position: "relative", left: "50px"}}>
+		<div style={{position: "relative", left: "50px"}}>
 			<h1>Hi {name}!</h1>
 
 			<Link style={{position: "absolute", top: "100px"}} to="/recipes">View Recipes and Reviews</Link>
@@ -57,6 +57,6 @@ export default function UserProfile({name}) {
 			</button>
 
 			{ elements[state] }
-		</p>
+		</div>
 	)
 }

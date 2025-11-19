@@ -34,7 +34,7 @@ function App() {
         <Route path="/login" element={<Login />}></Route>
         <Route path="/signup" element={<Signup />}></Route>
         <Route path="/profile" element={<UserProfile name={"Tester"}/>}></Route>
-        <Route path="/generate" element={<Generate cuisines={cuisines}/>}></Route>
+        <Route path="/generate" element={<Generate appliances={appliances} cuisines={cuisines}/>}></Route>
         <Route path="/recipes" element={<Recipes />}></Route>
         <Route path="/preferences" element={<Preferences setCuisines={setCuisines} setAppliances={setAppliances}/>}></Route>
       </Routes>

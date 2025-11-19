@@ -1,17 +1,16 @@
 import { useState } from 'react';
 //import preferences from './Preferences.js';
 
-export default function Generate({ cuisines }) {
+export default function Generate({ appliances, cuisines }) {
 	const [recipes, setRecipes] = useState([]);
 
 	// const testIngredients = Preferences.testIngredients;
 	// const testCuisines = Preferences.testCuisines;
-	const testIngredients = [];
-	const testCuisines = cuisines;
+	const testIngredients = ["Tomato", "Egg", "Flour", "Oregano", "Ground Beef", "Cheese"];
 
 	function generateRecipe() {
 		let testRecipe = {
-			ingredients: "",
+			ingredients: "Tomato, Egg, Flour, Cheese",
 			instructions: "Make pizza, put in oven",
 			appliances: "Oven",
 			budget: "10"
@@ -32,11 +31,11 @@ export default function Generate({ cuisines }) {
 	}
 
 	return (
-		<p style={{position: "relative", left: "50px"}}>
+		<div style={{position: "relative", left: "50px"}}>
 			<h1>Generate Recipes!</h1>
 
 			<h2>Here are some of the ingredients you have:</h2>
-			<p style={{position: "relative", left: "50px"}}>
+			<div style={{position: "relative", left: "50px"}}>
 				<ul>
 					{
 						testIngredients.map( (item) => {
@@ -46,30 +45,42 @@ export default function Generate({ cuisines }) {
 						}
 					)}
 				</ul>
-			</p>
+			</div>
 
 			<h2>and cuisines you've chosen:</h2>
-			<p style={{position: "relative", left: "50px"}}>
+			<div style={{position: "relative", left: "50px"}}>
 				<ul>
 					{
-						testCuisines.map( (item) => {
+						cuisines.map( (item) => {
 							return (
 								<li>{item}</li>
 							)
 						}
 					)}
 				</ul>
-			</p>
+			</div>
+			<h2>and appliances you own:</h2>
+			<div style={{position: "relative", left: "50px"}}>
+				<ul>
+					{
+						appliances.map( (item) => {
+							return (
+								<li>{item}</li>
+							)
+						}
+					)}
+				</ul>
+			</div>
 
 			<button onClick={generateRecipe}>Generate</button>
 
-			<p style={{position: "relative", left: "50px"}}>
+			<div style={{position: "relative", left: "50px"}}>
 				{recipes.map( (item) => 
 					{
 						return recipeDisplay(item);
 					}
 				)}
-			</p>
-		</p>
+			</div>
+		</div>
 	);
 }

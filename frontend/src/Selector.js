@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 
 export default function Selector( { setState, options } ) {
-	const [numOptions, setNumOptions] = useState(1);
+	const [otherOptions, setOtherOptions] = useState([0]);
+	const [otherChecked, setOtherChecked] = useState([false]);
 	
 	function handleSubmit(e) {
 		e.preventDefault();
@@ -12,18 +13,42 @@ export default function Selector( { setState, options } ) {
 		const formJson = Object.fromEntries(formData.entries());
 		
 		console.log(formJson);
-		let selectedCuisines = [];
+		let selectedOptions = [];
 		for (let key in formJson) {
 			if (formJson[key] == "on") {
-				if (key == "other") {
-					selectedCuisines.push(formJson["text"]);
+				let otherKey = key.split(/[0-9]/);
+				if (otherKey[0] == "other") {
+					selectedOptions.push(formJson[`text${key.substring(5)}`]);
 				}
 				else {
-					selectedCuisines.push(key);
+					selectedOptions.push(key);
 				}
 			}
 		}
-		setState(selectedCuisines);
+		setState(selectedOptions);
+	}
+
+	function handleTextChange(e, item) {
+		let temp = [...otherChecked];
+		if (e.target.value != "") {
+			temp[item] = true;
+		}
+		else {
+			temp[item] = false;
+		}
+		setOtherChecked(temp);
+	}
+
+	function handleClick(e, item) {
+		let temp = [...otherChecked];
+		temp[item] = !temp[item];
+		setOtherChecked(temp);
+	}
+
+	function handleAddOption() {
+		let nextID = otherOptions.at(-1) + 1;
+		setOtherOptions(otherOptions.concat(nextID));
+		setOtherChecked(otherChecked.concat(false));
 	}
 
 	return (
@@ -33,23 +58,33 @@ export default function Selector( { setState, options } ) {
 					options.map( (item) => {
 						return (
 							<>
-							<label>
-								<input name={item} type="checkbox"></input> {item}
-							</label>
-							<br />
+								<label style={{display: "inline-block", paddingTop: "5px"}}>
+									<input name={item} type="checkbox"></input> {item}
+								</label>
+								<br />
 							</>
 						)
 					}
 				)}
 				{
-					[Array(numOptions).keys()].map((item) => { return (<><input name="other" type="checkbox"></input> <input name="text"></input> <br/></>)})
+					otherOptions.map(
+						(item) => { 
+							return (
+							<>	
+								<label style={{display: "inline-block", paddingTop: "5px"}}>
+									<input name={`other${item}`} onChange={e => handleClick(e, item)} checked={otherChecked[item]} type="checkbox"></input> 
+									<input name={`text${item}`} onChange={e => handleTextChange(e, item)}></input>
+								</label>
+								<br />
+							</>
+							);
+						}
+					)
 				}
-				
-				<button type="button" onClick={() => setNumOptions(numOptions+1)}>Add Option</button>
-				<button type="submit">Save Changes</button>
-				<h3>hi{numOptions}</h3>
+				<br />
+				<button type="button" onClick={handleAddOption}>Add Option</button>
+				<button type="submit" style={{margin: "10px"}}>Save Changes</button>
 			</form>
-			<form></form> 
 		</>
 	);
 }
