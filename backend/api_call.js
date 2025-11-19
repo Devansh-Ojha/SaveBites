@@ -338,25 +338,31 @@ app.patch('/ingredients/:ingredient', (req, res) => {
 });
 
 // DELETE an ingredient by name
-app.delete('/user-ingredients/:user', async (req, res) => {
-    const ingredientToDel = pluralize.singular(req.params.ingredient.toLowerCase());
+app.delete('/user-ingredients/:user/:ingredient', async (req, res) => {
+  try {
+    const ingredientKey = pluralize.singular(req.params.ingredient.toLowerCase());
 
-    if (!req.user || !req.user._id) {
-      return res.status(404).json({message: 'Could not find user'})
-    }
+    const updateResult = await UserProfile.updateOne(
+      { username, [`ingredients.${ingredientKey}`]: { $exists: true } },
+      { $unset: { [`ingredients.${ingredientKey}`]: "" } }
+    );
 
-    unupdate = ['dietaryRestrictions','cuisinePreferences','budget','timeAvailable','appliances','recipeRatings'];
-    const updatedUser = await UserProfile.findOneAndUpdate(req.params.username);
-    if (deleted) {
-        res.status(200).json({
-            message: 'Deleted ' + ingredientToDel
+    if (updateResult.matchedCount === 0) {
+        return res.status(404).json({
+            message: 'Usernot found or ingredient not found'
         });
     }
-    else {
-        res.status(404).json({
+    if (updateResult.modifiedCount === 0){
+        return res.status(404).json({
             message: 'Ingredient not found'
         });
     }
+    return res.status(200).json({
+      message: 'Deleted ' + ingredientKey,
+    });
+  } catch (error) {
+    return res.status(500).json({message: 'Server error'});
+  }
 });
 
 // Start the server
