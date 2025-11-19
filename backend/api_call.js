@@ -241,7 +241,8 @@ const ingredients = new Map([
 ]);
 
 // Routes
-// GET all ingredients
+// PARAM: username
+// GET all ingredients of the user
 app.get('/user-ingredients/:user', async (req, res) => {
     try {
         const { user : username } = req.params
@@ -254,50 +255,61 @@ app.get('/user-ingredients/:user', async (req, res) => {
     }
 });
 
-/*// Dummy API call for getting a recipe from LLM (sends a string on get)
-app.get('/dummyLLMReceipe', (req, res) => {
-    recipe = "This is a fake recipe";
-    res.send(recipe);
-});
-*/
-
 // GET a single item by ingredient
-app.get('/ingredients/:ingredient', async (req, res) => {
-    const ingredientName = pluralize.singular(req.params.ingredient.toLowerCase());
-    const ingredientQuantity = ingredients.get(ingredientName);
-    // const doc = await req.db.collection("ingredients").findOne({ name: ingredientName });
-    
-    if (ingredientQuantity != undefined) {
-        res.json({ingredientName, ingredientQuantity});
-    } else {
-        res.status(404).send('Ingredient not found');
+app.get('/user-ingredients/:ingredient', async (req, res) => {
+  try {
+    const { user : username, ingredient } = req.params;
+
+  // look up user in MongoDB
+    const user = await UserProfile.findByUsername(username);
+    if (!user) {
+      return res.status(404).json({ error: "Could not find user" });
     }
+
+    const ingredientName = pluralize.singular(ingredient.toLowerCase());
+    const ingredients = user.ingredients || {};
+    const ingredientQuantity = ingredients[ingredient];
+
+  // if ingredient not found, error 404
+  if (ingredientQuantity != undefined) {
+    return res.status(200).json({
+      ingredientName,
+      ingredientQuantity,
+    });
+  } else {
+    return res.status(404).json({ error: 'Ingredient not found' });
+  }
+} catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Failed to fetch ingredient' });
+  }
 });
 
-// POST a new ingredient
-app.post('/ingredients/:ingredient', (req, res) => {
-    const newIngredient = pluralize.singular(req.params.ingredient.toLowerCase());
-    const newIngredientQuantity = Number(req.body.quantity);
+    // const ingredientName = pluralize.singular(req.params.ingredient.toLowerCase());
+    // const ingredientQuantity = ingredients.get(ingredientName);
+    // // const doc = await req.db.collection("ingredients").findOne({ name: ingredientName });
     
-    // if ingredients already has the ingredient, update the quantity
-    if (ingredients.has(newIngredient)) {
-        const updatedQuantity = ingredients.get(newIngredient) + newIngredientQuantity;
-        if (updatedQuantity > 0) {
-            ingredients.set(newIngredient, updatedQuantity);
-            res.status(201).json({newIngredient, updatedQuantity});
-        }
-        else {
-            ingredients.delete(newIngredient); // delete ingredient if quantity is zero.
-        }
-        
+    // if (ingredientQuantity != undefined) {
+    //     res.json({ingredientName, ingredientQuantity});
+    // } else {
+    //     res.status(404).send('Ingredient not found');
+    // }
+
+// PARAM: username
+// BODY: key value pair ingredient - quantity
+// PATCH a new ingredient
+app.patch('/user-ingredients/:user', async (req, res) => {
+    
+    try {
+        const { user : username } = req.params
+        const user = await UserProfile.findByUsername(username);
+        if (!user) return res.status(404).json({ error: "Could not find user" });
+        return res.status(200).json(user.ingredients);
+    } catch(error){
+        console.log(error)
+        return res.status(500).json({error: "Failed to fetch user"});
     }
-    else {
-        // if a new ingredient, add the ingredient to ingredients
-        if (newIngredientQuantity > 0) {
-            ingredients.set(newIngredient, newIngredientQuantity);
-            res.status(201).json({newIngredient, newIngredientQuantity});
-        }
-    }
+
 });
 
 /*// GET a recipe by making a call to /ingredients, then send the JSON to /dummyLLMReceipe to get back a recipe
@@ -326,10 +338,15 @@ app.patch('/ingredients/:ingredient', (req, res) => {
 });
 
 // DELETE an ingredient by name
-app.delete('/ingredients/:ingredient', (req, res) => {
+app.delete('/user-ingredients/:user', async (req, res) => {
     const ingredientToDel = pluralize.singular(req.params.ingredient.toLowerCase());
-    const deleted = ingredients.delete(ingredientToDel);
 
+    if (!req.user || !req.user._id) {
+      return res.status(404).json({message: 'Could not find user'})
+    }
+
+    unupdate = ['dietaryRestrictions','cuisinePreferences','budget','timeAvailable','appliances','recipeRatings'];
+    const updatedUser = await UserProfile.findOneAndUpdate(req.params.username);
     if (deleted) {
         res.status(200).json({
             message: 'Deleted ' + ingredientToDel
