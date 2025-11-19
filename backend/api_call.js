@@ -1,3 +1,4 @@
+
 import pluralize from 'pluralize';
 // import { getDb } from './mongodb.js';
 import 'dotenv/config';
@@ -296,18 +297,24 @@ app.get('/user-ingredients/:ingredient', async (req, res) => {
     // }
 
 // PARAM: username
-// BODY: key value pair ingredient - quantity
-// PATCH a new ingredient
-app.patch('/user-ingredients/:user', async (req, res) => {
-    
+// BODY: JSON of lists of ingredient-quantity pairs
+// PATCH add all ingredients/quantities to ingredients of users
+app.patch('/user-ingredients/:user', async (req, res) => {   
     try {
         const { user : username } = req.params
         const user = await UserProfile.findByUsername(username);
         if (!user) return res.status(404).json({ error: "Could not find user" });
+        const entries = Object.entries(req.body);
+        // Iterate over the [key, value] pairs
+        for (const [key, value] of entries) {
+          user.ingredients.set(key, value);
+          console.log(`Added ${value} ${key}`);
+        }
+        await user.save();
         return res.status(200).json(user.ingredients);
     } catch(error){
         console.log(error)
-        return res.status(500).json({error: "Failed to fetch user"});
+        return res.status(500).json({error: "Error adding new ingredient"});
     }
 
 });
@@ -338,9 +345,10 @@ app.patch('/ingredients/:ingredient', (req, res) => {
 });
 
 // DELETE an ingredient by name
-app.delete('/user-ingredients/:user/:ingredient', async (req, res) => {
+app.delete('/user-ingredients/:user', async (req, res) => {
   try {
-    const ingredientKey = pluralize.singular(req.params.ingredient.toLowerCase());
+    const {ingredient} = req.body;
+    const ingredientKey = pluralize.singular(ingredient.toLowerCase());
 
     const updateResult = await UserProfile.updateOne(
       { username, [`ingredients.${ingredientKey}`]: { $exists: true } },
