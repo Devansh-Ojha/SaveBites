@@ -1,7 +1,7 @@
 import { useState } from 'react';
 //import preferences from './Preferences.js';
 
-export default function Generate({ appliances, cuisines }) {
+export default function Generate({ time, difficulty, budget, allergens, appliances, cuisines }) {
 	const [recipes, setRecipes] = useState([]);
 
 	// const testIngredients = Preferences.testIngredients;
@@ -72,7 +72,7 @@ export default function Generate({ appliances, cuisines }) {
 				</ul>
 			</div>
 
-			<button onClick={generateRecipe}>Generate</button>
+			<button onClick={generateRecipe}>Generate with ${budget} budget and {difficulty.toLowerCase()} difficulty within {Math.floor(time / 60)} {Math.floor(time / 60) == 1 ? "hour" : "hours"} and {time % 60} {time % 60 == 1 ? "minute" : "minutes"}</button>
 
 			<div style={{position: "relative", left: "50px"}}>
 				{recipes.map( (item) => 
