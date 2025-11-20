@@ -73,7 +73,7 @@ export default function Selector( { setState, options } ) {
 							<>	
 								<label style={{display: "inline-block", paddingTop: "5px"}}>
 									<input name={`other${item}`} onChange={e => handleClick(e, item)} checked={otherChecked[item]} type="checkbox"></input> 
-									<input name={`text${item}`} onChange={e => handleTextChange(e, item)}></input>
+									<input placeholder="Enter another option" name={`text${item}`} onChange={e => handleTextChange(e, item)}></input>
 								</label>
 								<br />
 							</>
