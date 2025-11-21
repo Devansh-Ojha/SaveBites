@@ -35,9 +35,7 @@ export default function Preferences({ timeState, difficultyState, budgetState, s
 				</label>
 			</span>
 
-			
-
-			<p style={{height: "500px"}}></p>
+			<p style={{height: "50px"}}></p>
 		</div>
 	);
 }

@@ -1,0 +1,18 @@
+.button {
+	position: absolute;
+	border: none;
+	background: none;
+	font-size: 16px;
+	color: rgb(122, 122, 122);
+}
+
+.button:hover {
+	color: rgb(0, 0, 0);
+	font-weight: bold;
+}
+
+.content {
+	float: left;
+	position: absolute;
+	top: 200px;
+}
