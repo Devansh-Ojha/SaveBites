@@ -5,7 +5,7 @@ import 'dotenv/config';
 
 import express from 'express';
 const app = express();
-const port = 3008;
+const port = 3010;
 import mongoose from 'mongoose';
 const uri = process.env.MONGODB_URI
 
@@ -257,44 +257,25 @@ app.get('/user-ingredients/:user', async (req, res) => {
 });
 
 // GET a single item by ingredient
-app.get('/user-ingredients/:ingredient', async (req, res) => {
+app.get('/user-ingredients/:user/:ingredient', async (req, res) => {
   try {
-    const { user : username, ingredient } = req.params;
-
-  // look up user in MongoDB
+    const { user : username, ingredient } = req.params
     const user = await UserProfile.findByUsername(username);
-    if (!user) {
-      return res.status(404).json({ error: "Could not find user" });
+    if (!user) return res.status(404).json({ error: "Could not find user" });
+    const ingredientKey = pluralize.singular(ingredient.toLowerCase());
+    const ingredientQuantity = user.ingredients?.get(ingredientKey);
+    if (ingredientQuantity == undefined) {
+      return res.status(404).json({ error: "Ingredient not found" });
     }
+    const newJson = { [ingredientKey]: ingredientQuantity };
+    return res.status(200).json(newJson);
 
-    const ingredientName = pluralize.singular(ingredient.toLowerCase());
-    const ingredients = user.ingredients || {};
-    const ingredientQuantity = ingredients[ingredient];
-
-  // if ingredient not found, error 404
-  if (ingredientQuantity != undefined) {
-    return res.status(200).json({
-      ingredientName,
-      ingredientQuantity,
-    });
-  } else {
-    return res.status(404).json({ error: 'Ingredient not found' });
-  }
-} catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Failed to fetch ingredient' });
-  }
-});
-
-    // const ingredientName = pluralize.singular(req.params.ingredient.toLowerCase());
-    // const ingredientQuantity = ingredients.get(ingredientName);
-    // // const doc = await req.db.collection("ingredients").findOne({ name: ingredientName });
     
-    // if (ingredientQuantity != undefined) {
-    //     res.json({ingredientName, ingredientQuantity});
-    // } else {
-    //     res.status(404).send('Ingredient not found');
-    // }
+} catch(error){
+    console.log(error)
+    return res.status(500).json({error: "Failed to fetch user"});
+}
+
 
 // PARAM: username
 // BODY: JSON of lists of ingredient-quantity pairs
@@ -307,73 +288,33 @@ app.patch('/user-ingredients/:user', async (req, res) => {
         const entries = Object.entries(req.body);
         // Iterate over the [key, value] pairs
         for (const [key, value] of entries) {
-          user.ingredients.set(key, value);
-          console.log(`Added ${value} ${key}`);
+          // Checks if user already has ingredient
+          // True: Adds new quantity to  old quantity, remove if quantity goes to zero
+          // False: Adds new key-value to user ingredients map
+          if (user.ingredients.has(key)) {
+            const oldQuantity = user.ingredients.get(key);
+            if (oldQuantity + value == 0) {
+              user.ingredients.delete(key);
+              console.log(`Removed ${key}`);
+            } else {
+              user.ingredients.set(key, oldQuantity + value);
+              console.log(`Added ${value} ${key}`);
+            }
+          } else {
+            user.ingredients.set(key, value);
+            console.log(`Added ${value} ${key}`);
+          }
         }
+        // Save changes to DB
         await user.save();
         return res.status(200).json(user.ingredients);
     } catch(error){
         console.log(error)
         return res.status(500).json({error: "Error adding new ingredient"});
     }
-
-});
-
-/*// GET a recipe by making a call to /ingredients, then send the JSON to /dummyLLMReceipe to get back a recipe
-app.get('/getRecipe', (req, res) => {
-    ingredients_input = app.get('/ingredients');
-    recipe = app.get('/dummyLLMReceipe', req=ingredients_input)
-    res.send(recipe);
-});
-*/
-
-// PATCH (update) an ingredient's quantity by name
-app.patch('/ingredients/:ingredient', (req, res) => {
-    const newIngredient = pluralize.singular(req.params.ingredient.toLowerCase());
-    const newIngredientQuantity = Number(req.body.quantity);
-
-    /*retrieve current quantity from ingredients or default to 0 and add the additional quantity for the 
-    specific ingredient.*/
-    const updatedQuantity = (ingredients.get(newIngredient) ?? 0) + newIngredientQuantity;
-    if (updatedQuantity > 0) {
-        ingredients.set(newIngredient, updatedQuantity);
-    }
-    else {
-        ingredients.delete(newIngredient);
-    }
-    res.status(200).json({newIngredient, updatedQuantity})
-});
-
-// DELETE an ingredient by name
-app.delete('/user-ingredients/:user', async (req, res) => {
-  try {
-    const {ingredient} = req.body;
-    const ingredientKey = pluralize.singular(ingredient.toLowerCase());
-
-    const updateResult = await UserProfile.updateOne(
-      { username, [`ingredients.${ingredientKey}`]: { $exists: true } },
-      { $unset: { [`ingredients.${ingredientKey}`]: "" } }
-    );
-
-    if (updateResult.matchedCount === 0) {
-        return res.status(404).json({
-            message: 'Usernot found or ingredient not found'
-        });
-    }
-    if (updateResult.modifiedCount === 0){
-        return res.status(404).json({
-            message: 'Ingredient not found'
-        });
-    }
-    return res.status(200).json({
-      message: 'Deleted ' + ingredientKey,
-    });
-  } catch (error) {
-    return res.status(500).json({message: 'Server error'});
-  }
 });
 
 // Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
-});
+})});
