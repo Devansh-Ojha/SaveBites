@@ -39,7 +39,6 @@ export default function UserProfile({name}) {
 
 			<Link style={{float: "left", position: "absolute", top: "125px"}} to="/recipes">View Recipes and Reviews</Link>
 
-			
 			<span>
 				<button className="button" style={{left: "0px"}} onClick={() => {
 					dispatch({type: "details"})
@@ -61,10 +60,6 @@ export default function UserProfile({name}) {
 
 				<hr style={{position: "relative", left: "-425px", top: "25px", width: "590px"}}/>
 			</span>
-
-			
-			
-			
 
 			{ elements[state] }
 		</div>
