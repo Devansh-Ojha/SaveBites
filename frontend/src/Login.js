@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import "./Login.css";
+import "./buttons.css";
 
 export default function Login() {
 	return (
@@ -23,7 +24,7 @@ export default function Login() {
 					</label>
 				</div>
 
-				<button type="submit" className="btn-login">Login</button>
+				<button type="submit" className="btn-primary">Login</button>
 			</form>
 
 			<p className="signup-prompt">

@@ -61,23 +61,6 @@
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
 }
 
-.btn-signup {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #ffffff;
-  background-color: #4CAF50; 
-  border: none;
-  padding: 0.85rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  margin-top: 0.5rem; 
-}
-
-.btn-signup:hover {
-  background-color: #43a047; 
-}
 
 .login-prompt {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;

@@ -1,12 +1,8 @@
 import { useState } from 'react';
 //import preferences from './Preferences.js';
 
-export default function Generate({ time, difficulty, budget, allergens, appliances, cuisines }) {
+export default function Generate({pantryItems, time, difficulty, budget, allergens, appliances, cuisines }) {
 	const [recipes, setRecipes] = useState([]);
-
-	// const testIngredients = Preferences.testIngredients;
-	// const testCuisines = Preferences.testCuisines;
-	const testIngredients = ["Tomato", "Egg", "Flour", "Oregano", "Ground Beef", "Cheese"];
 
 	function generateRecipe() {
 		let testRecipe = {
@@ -38,7 +34,7 @@ export default function Generate({ time, difficulty, budget, allergens, applianc
 			<div style={{position: "relative", left: "50px"}}>
 				<ul>
 					{
-						testIngredients.map( (item) => {
+						pantryItems.map( (item) => {
 							return (
 								<li>{item}</li>
 							)

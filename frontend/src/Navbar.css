@@ -29,33 +29,3 @@
   margin-left: auto;
   margin-right: 20px;
 }
-
-.navbar-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
-  border-radius: 200px;;
-  border: 0.5px solid black;
-  background: white;
-  color: black;
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.navbar-link:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px black;
-  background: #ffffff;
-}
-
-.navbar-link--primary {
-  background: #5fb05a;
-  color: #ffffff;
-  border-color: #5fb05a;
-}
-
-.navbar-link--primary:hover {
-  background: #4a9c45;
-  border-color: #4a9c45;
-}
