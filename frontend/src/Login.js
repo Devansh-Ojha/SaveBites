@@ -11,17 +11,17 @@ export default function Login() {
 
 			<form className="login-form">
 				<div className="form-group">
-					<label>
+					<label style={{paddingBottom: "1px"}}>
 						Email address <br />
-						<input className="form-input" type="email" placeholder="Enter your email"></input>
 					</label>
+					<input className="form-input" type="email" placeholder="Enter your email"></input>
 				</div>
 				
 				<div className="form-group">
-					<label>
+					<label style={{paddingBottom: "1px"}}>
 					Password <br />
-					<input className="form-input" type="password" placeholder="Enter your password"></input>
 					</label>
+					<input className="form-input" type="password" placeholder="Enter your password"></input>
 				</div>
 
 				<button type="submit" className="btn-primary">Login</button>

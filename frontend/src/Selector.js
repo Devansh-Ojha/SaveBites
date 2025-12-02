@@ -1,4 +1,6 @@
 import { useState, Fragment } from "react";
+import './buttons.css';
+import './Login.css';
 
 export default function Selector( { setState, options } ) {
 	const [otherOptions, setOtherOptions] = useState([0]);
@@ -73,7 +75,7 @@ export default function Selector( { setState, options } ) {
 							<>	
 								<label style={{display: "inline-block", paddingTop: "5px"}}>
 									<input name={`other${item}`} onChange={e => handleClick(e, item)} checked={otherChecked[item]} type="checkbox"></input> 
-									<input placeholder="Enter another option" name={`text${item}`} onChange={e => handleTextChange(e, item)}></input>
+									<input style={{borderWidth: "1px", borderRadius: "6px"}} placeholder="Enter another option" name={`text${item}`} onChange={e => handleTextChange(e, item)}></input>
 								</label>
 								<br />
 							</>
@@ -82,8 +84,8 @@ export default function Selector( { setState, options } ) {
 					)
 				}
 				<br />
-				<button type="button" onClick={handleAddOption}>Add Option</button>
-				<button type="submit" style={{margin: "10px"}}>Save Changes</button>
+				<button className="btn-primary" type="button" onClick={handleAddOption}>Add Option</button>
+				<button className="btn-primary" type="submit" style={{margin: "10px"}}>Save Changes</button>
 			</form>
 		</>
 	);

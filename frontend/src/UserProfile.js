@@ -1,6 +1,7 @@
 import { useReducer } from 'react';
 import { Link } from 'react-router-dom';
-import "./Profile.css"
+import "./Profile.css";
+import './buttons.css';
 
 function reducer(state, action) {
 	if (state == action.type) {
@@ -24,7 +25,7 @@ export default function UserProfile({name}) {
 		"settings": <div className="content">
 						Settings and Preferences:
 						<p>Theme: {testTheme}</p>
-						<Link to="/preferences">
+						<Link className="link" to="/preferences">
 							Set Preferences
 						</Link>
 					</div>,
@@ -34,13 +35,13 @@ export default function UserProfile({name}) {
 	}
 
 	return (
-		<div style={{position: "relative", left: "50px"}}>
+		<div className="profile-box">
 			<h1>Hi {name}!</h1>
 
-			<Link style={{float: "left", position: "absolute", top: "125px"}} to="/recipes">View Recipes and Reviews</Link>
+			<Link className="link" style={{float: "left", position: "absolute", top: "175px"}} to="/recipes">View Recipes and Reviews</Link>
 
 			<span>
-				<button className="button" style={{left: "0px"}} onClick={() => {
+				<button className="button" style={{left: "35px"}} onClick={() => {
 					dispatch({type: "details"})
 				}}>
 					Account Details
@@ -58,10 +59,12 @@ export default function UserProfile({name}) {
 					Help and Support
 				</button>
 
-				<hr style={{position: "relative", left: "-425px", top: "25px", width: "590px"}}/>
+				<hr style={{position: "relative", left: "-125px", top: "25px", width: "560px"}}/>
 			</span>
 
-			{ elements[state] }
+			<div style={{position: "relative", top: "-100px"}}>
+				{ elements[state] }
+			</div>
 		</div>
 	)
 }

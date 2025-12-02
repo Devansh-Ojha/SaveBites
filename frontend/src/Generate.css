@@ -1,0 +1,11 @@
+.box {
+	height: 70vh;
+	width: 100%;
+	max-width: 380px;
+	background-color: #ffffff;
+	padding: 2.5rem;
+	border-radius: 12px;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+	position: relative;
+	top: 20px;
+}
