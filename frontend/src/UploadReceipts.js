@@ -26,8 +26,8 @@ export default function UploadReceipts({pantryItems, setPantryItems}) {
 
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
-            console.log(formData);
 
+            console.log("form data:", formData);
             const response = await fetch('http://localhost:3001/ocr', {
                 method: 'POST',
                 body: formData
@@ -41,8 +41,12 @@ export default function UploadReceipts({pantryItems, setPantryItems}) {
             console.log("OCR Result:", data);
             
             // Handle the extracted ingredients
-            if (data.ingredients && Array.isArray(data.ingredients)) {
-                setPantryItems([...pantryItems, ...data.ingredients]);
+            let ingredients = [];
+            for (let i = 0; i < Object.keys(data).length; i++) {
+                ingredients.push(Object.keys(data)[i]);
+            }
+            if (ingredients && Array.isArray(ingredients)) {
+                setPantryItems([...pantryItems, ...ingredients]);
             }
         } catch (err) {
             console.error("Error processing receipt:", err);

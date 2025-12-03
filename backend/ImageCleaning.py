@@ -7,6 +7,8 @@ import requests
 import os
 from dotenv import load_dotenv
 from deskew import determine_skew
+import sys
+import json
 
 load_dotenv()
 
@@ -16,8 +18,7 @@ if not API_KEY:
 
 
 # path to receipt image
-img_path = "test_images/test_image28.png"
-
+img_path = sys.argv[1]#"backend/test_images/test_image15.png"
 
 # common words on a receipt to ignore
 skip_words = [
@@ -69,7 +70,7 @@ def clean_image(infile):
 
     # applies the otsu contrast threshold to automatically decide thresholds per pixel rather than hard coding a value
     final = otsu_contrast(rotated_gray)
-    cv.imwrite("test_images/test_output.png", final) # puts the final image in test_output.png
+    cv.imwrite("backend/test_images/test_output.png", final) # puts the final image in test_output.png
     return final
 
 # If you don't have tesseract executable in your PATH, include the following:
@@ -98,11 +99,9 @@ def decide_receipt_format(string):
             if format1regex.match(line):
                 return item_quant_on_same_line_format(string)
             elif format2regex.match(line):
-                return no_quantity_format2(string)
+                return no_quantity_format(string)
             # elif "@" in line:
                 
-
-
 # takes the entire receipt text and extracts the ingredients and their quantities
 def item_quant_on_same_line_format(string):
     quant = 0
@@ -114,13 +113,13 @@ def item_quant_on_same_line_format(string):
             line_array.append(line)
 
     for curr in line_array: # go through each line appended
-        ing = ''
+        ing = ""
         quant = 0
-        for item in curr.split(' '): # splits line by space, so now it is its own array
+        for item in curr.split(" "): # splits line by space, so now it is its own array
             if item.isdigit(): # checks if item is entirely digits, won't override, since 1x is a string, not digit
                 quant = int(item) #sets temp_quantity to item
             elif item.isalpha(): # if item is only alphabet characters
-                ing = ing + item + ' ' #update igredient variable, accounts for multi word ingredients
+                ing = ing + item + " " #update igredient variable, accounts for multi word ingredients
         #check usda food database for the item to see if it is a food
         if is_food_usda(ing, API_KEY):
             for word in skip_words: 
@@ -142,10 +141,10 @@ def no_quantity_format(string):
             line_array.append(line)
     
     for curr in line_array:
-        ing = ''
-        for item in curr.split(' '):
+        ing = ""
+        for item in curr.split(" "):
             if item.isalpha():
-                ing = ing + item + ' '
+                ing = ing + item + " "
         if is_food_usda(ing, API_KEY):
             for word in skip_words:
                 if (word in ing.lower()) or ing == "":
@@ -189,8 +188,9 @@ def show_data_as_table(dictionary):
         print(f"{ing:<{w1}} | {q:<{w2}}")
 
 clean_image(img_path)
-receipt_text = pyt.image_to_string('test_images/test_output.png')
+receipt_text = pyt.image_to_string('backend/test_images/test_output.png')
 extracted_ingredients = decide_receipt_format(receipt_text)
+print(json.dumps(extracted_ingredients))
 #extracted_ingredients = trader_joes_format(receipt_text)
 #show_data_as_table(extracted_ingredients)
 

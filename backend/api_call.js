@@ -19,7 +19,18 @@ app.use(express.json());
 app.use(cors());
 
 // Configure multer for file uploads
-const upload = multer({ dest: 'uploads/' });
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    filename: function (req, file, cb) {
+        // Keeps the original extension (e.g. .png, .jpg)
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        const ext = path.extname(file.originalname);
+        cb(null, file.fieldname + '-' + uniqueSuffix + ext)
+    }
+});
+const upload = multer({ storage: storage });
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -332,17 +343,24 @@ app.patch('/user-ingredients/:user', async (req, res) => {
 // OCR endpoint to process receipts
 app.post('/ocr', upload.single('file'), async (req, res) => {
     try {
-        if (!req.body) {
+        console.log("request file:", req.file)
+        if (!req.file) {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
-        const filePath = req.body;
-        
+        const filePath = req.file.path;
+        const absoluteFilePath = path.resolve(__dirname, filePath);
+        const scriptPath = path.resolve(__dirname, "ImageCleaning.py");
+        console.log("file path:", filePath);
+        console.log("absolute file path:", absoluteFilePath);
+        console.log("script path:", scriptPath);
+
         // Call the Python OCR script
-        const python = spawn('python3.12', ['ImageCleaning.py', filePath]);
+        const python = spawn('python3.12', [scriptPath, filePath]);
         
         let output = '';
         let error = '';
+        
 
         python.stdout.on('data', (data) => {
             output += data.toString();
@@ -354,8 +372,8 @@ app.post('/ocr', upload.single('file'), async (req, res) => {
 
         python.on('close', (code) => {
             // Clean up uploaded file
-            fs.unlink(filePath, (err) => {
-                if (err) console.error("Error deleting file:", err);
+            fs.unlink(absoluteFilePath, (err) => {
+                if (err && err.code !== 'ENOENT') console.error("Error deleting file:", err);
             });
 
             if (code !== 0) {
@@ -367,6 +385,7 @@ app.post('/ocr', upload.single('file'), async (req, res) => {
             }
 
             try {
+                console.log("output:", output)
                 const result = JSON.parse(output);
                 return res.status(200).json(result);
             } catch (parseError) {
