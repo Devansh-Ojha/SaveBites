@@ -1,5 +1,3 @@
-
-
 import pluralize from 'pluralize';
 // import { getDb } from './mongodb.js';
 import 'dotenv/config';
@@ -8,12 +6,24 @@ import express from 'express';
 const app = express();
 const port = 3001;
 import mongoose from 'mongoose';
+import multer from 'multer';
+import { spawn } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 const uri = process.env.MONGODB_URI
-
-
+import cors from 'cors'
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
+app.use(cors());
+
+// Configure multer for file uploads
+const upload = multer({ dest: 'uploads/' });
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function connect() {
     try {
@@ -316,6 +326,60 @@ app.patch('/user-ingredients/:user', async (req, res) => {
     } catch(error){
         console.log(error)
         return res.status(500).json({error: "Error adding new ingredient"});
+    }
+});
+
+// OCR endpoint to process receipts
+app.post('/ocr', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.body) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
+
+        const filePath = req.body;
+        
+        // Call the Python OCR script
+        const python = spawn('python3.12', ['ImageCleaning.py', filePath]);
+        
+        let output = '';
+        let error = '';
+
+        python.stdout.on('data', (data) => {
+            output += data.toString();
+        });
+
+        python.stderr.on('data', (data) => {
+            error += data.toString();
+        });
+
+        python.on('close', (code) => {
+            // Clean up uploaded file
+            fs.unlink(filePath, (err) => {
+                if (err) console.error("Error deleting file:", err);
+            });
+
+            if (code !== 0) {
+                console.error("Python script error:", error);
+                return res.status(500).json({ 
+                    error: "OCR processing failed",
+                    details: error 
+                });
+            }
+
+            try {
+                const result = JSON.parse(output);
+                return res.status(200).json(result);
+            } catch (parseError) {
+                console.error("Error parsing Python output:", output);
+                return res.status(500).json({ 
+                    error: "Failed to parse OCR results",
+                    output: output 
+                });
+            }
+        });
+    } catch (error) {
+        console.error("OCR endpoint error:", error);
+        return res.status(500).json({ error: "OCR processing failed" });
     }
 });
 

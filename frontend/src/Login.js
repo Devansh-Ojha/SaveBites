@@ -2,7 +2,22 @@ import { Link } from 'react-router-dom';
 import "./Login.css";
 import "./buttons.css";
 
+import { getUserProfile } from "./api.js";
+
 export default function Login() {
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [errorMsg, setErrorMsg] = useState("");
+	const handleSubmit = async (e) => {
+		
+		e.preventDefault(); //prevent page reload
+		try {
+			const user = getUserProfile(email);
+			
+		} catch (err) {
+			console.error(err);
+		}
+	}
 	return (
 		<div className="login-page-container">
 			<div className="login-form-box">
