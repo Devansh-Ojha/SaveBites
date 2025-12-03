@@ -279,6 +279,7 @@ app.get('/user-ingredients/:user/:ingredient', async (req, res) => {
     console.log(error)
     return res.status(500).json({error: "Failed to fetch user"});
 }
+});
 
 
 // PARAM: username
@@ -321,4 +322,4 @@ app.patch('/user-ingredients/:user', async (req, res) => {
 // Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
-})});
+});
