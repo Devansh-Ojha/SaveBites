@@ -1,11 +1,12 @@
 
+
 import pluralize from 'pluralize';
 // import { getDb } from './mongodb.js';
 import 'dotenv/config';
 
 import express from 'express';
 const app = express();
-const port = 3010;
+const port = 3001;
 import mongoose from 'mongoose';
 const uri = process.env.MONGODB_URI
 
@@ -91,6 +92,7 @@ connect();
 // Define your schema (e.g., for a 'Product' model)
 const userProfileSchema = new mongoose.Schema({
     username: { type: String, required: true, trim: true, unique: true },
+    password: [String], 
     dietaryRestrictions: [String],
     cuisinePreferences: [String],
     budget: Number,
@@ -138,6 +140,7 @@ app.post('/users', async (req, res) => {
     try {
       const {
         username,
+        password, 
         dietaryRestrictions,
         cuisinePreferences,
         budget,
@@ -153,6 +156,7 @@ app.post('/users', async (req, res) => {
   
       const newUser = await UserProfile.create({
         username,
+        password, 
         dietaryRestrictions,
         cuisinePreferences,
         budget,
