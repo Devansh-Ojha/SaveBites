@@ -1,0 +1,31 @@
+.navbar {
+  padding-top: 10px;
+  padding-left: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: 99.3%;
+  height: 40px;
+  background: rgb(179, 199, 179);
+  box-shadow: 0 4px 12px rgba(37, 49, 34, 0.08);
+}
+
+.navbar-structure {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-links-left {
+  display: flex;
+  gap: 10px;
+}
+
+.navbar-links-right {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+  margin-right: 20px;
+}

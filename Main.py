@@ -5,7 +5,13 @@ from llm_pipeline.llm_recipe_generator import RecipeLLM
 import os
 import json
 
+#<<<<<<< HEAD
 api_key = os.getenv("GOOGLE_API_KEY")
+#=======
+#user_id = -1
+#past_purchases = {"tomato": 2}
+#dietary_restrictions = {"gluten"}
+#>>>>>>> main
 
 def main():
     test_profile = UserProfile(
