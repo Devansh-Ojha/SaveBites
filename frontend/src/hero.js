@@ -8,6 +8,7 @@ export default function Hero() {
         <p  className="hero-subtitle">
           Reduce waste. Spend smarter. Eat better.
         </p>
+
       </div>
     </section>
   );
