@@ -4,31 +4,91 @@ import './Generate.css'
 
 export default function Generate({pantryItems, time, difficulty, budget, allergens, appliances, cuisines }) {
 	const [recipes, setRecipes] = useState([]);
-
+	const [selectedRecipe, setSelectedRecipe] = useState(null);
+	
 	function generateRecipe() {
-		let testRecipe = {
+		let testRecipe1 = {
 			name: "Cheese Pizza",
-			ingredients: "Tomato, Egg, Flour, Cheese",
-			instructions: "Make pizza, put in oven",
-			appliances: "Oven",
-			budget: "10"
+		  
+			ingredients: [
+			  { item: "Tomato", amount: "2", unit: "" },
+			  { item: "Egg", amount: "1", unit: "" },
+			  { item: "Flour", amount: "200", unit: "g" },
+			  { item: "Cheese", amount: "150", unit: "g" },
+			  { item: "Marinara Sauce", amount: "1", unit: "cup"}
+			],
+		  
+			instructions: [
+			  "Mix the flour and egg to make dough.",
+			  "Roll out the dough.",
+			  "Add tomato and cheese.",
+			  "Bake in oven for 20 minutes."
+			],
+		  
+			appliances: ["Oven", "Roller"],
+		  
+			budget: 10,
+			time: 50
+		  };
+
+		  let testRecipe2 = {
+			name: "Peanutbutter and Jelly Sandwich",
+			ingredients: [
+				{ item: "Bread", amount: "2", unit: "slices" },
+				{ item: "Peanut Butter", amount: "1", unit: "tbsp" },
+				{ item: "Jelly", amount: "1", unit: "tbsp" }
+			],
+			instructions: [
+				"Spread peanut butter.",
+				"Spread jelly.",
+				"Put slices together."
+			],
+			appliances: ["None"],
+			budget: 3,
+			time: 3
 		};
 
-		setRecipes(recipes.concat(testRecipe));
+		// React batches updates, can't use concat
+		setRecipes(prev => [...prev, testRecipe1, testRecipe2]);
 	}
 
 	function recipeDisplay(recipe) {
 		return (
-			<p>
-				Name: {recipe.name} <br />
-				Ingredients: {recipe.ingredients}  <br />
-				Instructions: {recipe.instructions} <br />
-				Appliances: {recipe.appliances} <br />
-				Budget: ${recipe.budget}
+		  <div className="recipe-card">
+			<h2>{recipe.name}</h2>
+	  
+			<p><strong>Budget:</strong> ${recipe.budget}  
+			   <span style={{ float: "right" }}><strong>Time:</strong> {recipe.time} min</span>
 			</p>
-		);
-	}
+	  
+			<h3>Ingredients</h3>
+			<ul>
+			  {recipe.ingredients.map((ing, i) => (
+				<li key={i}>
+				  {ing.item} — {ing.amount} {ing.unit}
+				</li>
+			  ))}
+			</ul>
+	  
+			<h3>Appliances</h3>
+			<ul>
+			  {recipe.appliances.map((app, i) => (
+				<li key={i}>{app}</li>
+			  ))}
+			</ul>
 
+			<h3>Instructions</h3>
+			<ol>
+			  {recipe.instructions.map((step, i) => (
+				<li key={i}>{step}</li>
+			  ))}
+			</ol>
+	  
+		  </div>
+		);
+	  }
+	  
+	/*
 	function listRecipes(recipes) {
 		return (
 			<ul>
@@ -38,6 +98,25 @@ export default function Generate({pantryItems, time, difficulty, budget, allerge
 			</ul>
 		)
 	}
+	*/
+
+	function listRecipes(recipes) {
+		return (
+			<li>
+				{recipes.map((item, index) => (
+					<li 
+					  key={index} 
+					  className="recipe-list-item"
+					  onClick={() => setSelectedRecipe(item)}
+					  style={{ cursor: "pointer" }}
+					>
+						{item.name}
+					</li>
+				))}
+			</li>
+		);
+	}
+	
 
 	return (
 		<div style={{display: "flex"}}>
@@ -74,12 +153,12 @@ export default function Generate({pantryItems, time, difficulty, budget, allerge
 
 			<div className="box" style={{left: "30px"}}>
 				<h1>Generated Recipe</h1>
-				{recipes.length > 0 && recipeDisplay(recipes[0])}
+				{selectedRecipe ? recipeDisplay(selectedRecipe) : recipes.length > 0 && recipeDisplay(recipes[0])}
 			</div>
 
 			<div className="box" style={{left: "50px"}}>
 				<h1> Browse more Recipes </h1>
-				{recipes.length > 0 && listRecipes(recipes.slice(1,))}
+				{recipes.length > 0 && listRecipes(recipes)}
 			</div>
 
 		</div>
