@@ -5,13 +5,13 @@ import 'dotenv/config';
 import express from 'express';
 const app = express();
 const port = 3001;
-import mongoose from 'mongoose';
+//import mongoose from 'mongoose';
 import multer from 'multer';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-const uri = process.env.MONGODB_URI
+//const uri = process.env.MONGODB_URI
 import cors from 'cors'
 
 import bcrypt from "bcrypt";
@@ -52,6 +52,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 async function connect() {
     try {
         await mongoose.connect(uri);
@@ -59,7 +63,7 @@ async function connect() {
     } catch (error) {
         console.log(error);
     }
-}
+}*/
 
 class UserProfileClass {
     // Model static
@@ -130,7 +134,7 @@ app.get('/users/:username/verify-password', async (req, res) => {
   return verifyPassword(req.body,user.password);
 });
 // Define your schema (e.g., for a 'Product' model)
-const userProfileSchema = new mongoose.Schema({
+/*const userProfileSchema = new mongoose.Schema({
     username: { type: String, required: true, trim: true, unique: true },
     password: { type: String, required: true }, 
     dietaryRestrictions: [String],
@@ -151,7 +155,7 @@ const userProfileSchema = new mongoose.Schema({
   // 4) Model (clean name; schema controls collection)
   const UserProfile = mongoose.models.UserProfile
     || mongoose.model('UserProfile', userProfileSchema);
-
+*/
 app.get('/users', async (req, res) => {
     try {
         const users = await UserProfile.find({}).lean();
@@ -165,8 +169,25 @@ app.get('/users', async (req, res) => {
 app.get('/users/:username', async (req, res) => {
     try {
         const { username } = req.params
-        const user = await UserProfile.findByUsername(req.params.username);
-        if (!user) return res.status(404).json({ error: "Could not find user" });
+        if (mongoAvailable) {
+          try {
+              user = await UserProfile.findByUsername(username);
+          } catch (err) {
+              console.warn("Mongo fetch failed, proceeding without it.");
+          }
+        }
+
+        // If no user from DB, provide a dummy user
+        if (!user) {
+            user = {
+                username: username || "test_user",
+                ingredients: new Map([["tomato", 2], ["cheese", 1], ["flour", 3]]),
+                budget: 10,
+                timeAvailable: 60,
+                appliances: ["Oven", "Stove"],
+                cuisinePreferences: ["Italian"]
+            };
+        }
 
         return res.status(200).json(user);
     } catch(error){
@@ -381,7 +402,9 @@ app.post('/ocr', upload.single('file'), async (req, res) => {
         console.log("script path:", scriptPath);
 
         // Call the Python OCR script
-        const python = spawn('python3.12', [scriptPath, filePath]);
+        const pythonPath = path.resolve(__dirname, 'venv/bin/python');
+        const python = spawn(pythonPath, [scriptPath, JSON.stringify(user)]);
+
         
         let output = '';
         let error = '';

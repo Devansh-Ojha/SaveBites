@@ -17,21 +17,23 @@ function App() {
   const [allergens, setAllergens] = useState([]);
   const [username, setUsername] = useState("");
   const [pantryItems, setPantryItems] = useState([
-    'Apples',
-    'Bananas',
     'Chicken Breast',
     'Rice',
     'Pasta',
+    'Jelly',
     'Tomatoes',
     'Onions',
     'Garlic',
-    'Olive Oil',
+    'Flour',
+    'Bread',
+    'Peanut Butter',
     'Salt',
-    'Pepper'
+    'Pepper',
+    'Egg'
   ]);
-  const budgetState = useState(0);
+  const budgetState = useState(50);
   const difficultyState = useState("Beginner");
-  const timeState = useState(0);
+  const timeState = useState(100);
 
   return (
     <Router>
