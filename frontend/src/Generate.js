@@ -18,6 +18,7 @@ export default function Generate({pantryItems, time, difficulty, budget, allerge
 			  { item: "Cheese", amount: "150", unit: "g" },
 			  { item: "Marinara Sauce", amount: "1", unit: "cup"}
 			],
+			
 		  
 			instructions: [
 			  "Mix the flour and egg to make dough.",
@@ -48,9 +49,70 @@ export default function Generate({pantryItems, time, difficulty, budget, allerge
 			budget: 3,
 			time: 3
 		};
+		let testRecipe3 = {
+			name: "Tomato Pasta",
+			ingredients: [
+				{ item: "Pasta", amount: "100", unit: "g" },
+				{ item: "Tomato", amount: "2", unit: "" },
+				{ item: "Olive Oil", amount: "1", unit: "tbsp" },
+				{ item: "Basil", amount: "5", unit: "leaves" }
+			],
+			instructions: [
+				"Boil pasta.",
+				"Cook tomato with olive oil.",
+				"Mix pasta with sauce and basil."
+			],
+			appliances: ["Stove"],
+			budget: 8,
+			time: 20
+		};
 
-		// React batches updates, can't use concat
-		setRecipes(prev => [...prev, testRecipe1, testRecipe2]);
+		let testRecipe4 = {
+			name: "Fruit Smoothie",
+			ingredients: [
+				{ item: "Banana", amount: "1", unit: "" },
+				{ item: "Strawberry", amount: "5", unit: "" },
+				{ item: "Almond Milk", amount: "200", unit: "ml" }
+			],
+			instructions: [
+				"Add all ingredients to blender.",
+				"Blend until smooth."
+			],
+			appliances: ["Blender"],
+			budget: 5,
+			time: 5
+		};
+
+		let testRecipe5 = {
+			name: "Veggie Stir-Fry",
+			ingredients: [
+				{ item: "Broccoli", amount: "100", unit: "g" },
+				{ item: "Carrot", amount: "1", unit: "" },
+				{ item: "Bell Pepper", amount: "1", unit: "" },
+				{ item: "Soy Sauce", amount: "1", unit: "tbsp" }
+			],
+			instructions: [
+				"Chop all vegetables.",
+				"Stir-fry in a pan with soy sauce until cooked."
+			],
+			appliances: ["Stove", "Wok"],
+			budget: 7,
+			time: 15
+		};
+		const allRecipes = [testRecipe1, testRecipe2, testRecipe3, testRecipe4, testRecipe5];
+
+		const rankedRecipes = [...allRecipes].sort((a, b) => {
+			const score = (r) => {
+				const pantryScore = r.ingredients.filter(ing => pantryItems.includes(ing.item)).length / r.ingredients.length;
+				const timeScore = time > 0 ? 1 - (r.time / time) : 0; 
+				const applianceScore = r.appliances.every(app => appliances.includes(app)) ? 1 : 0;
+				return 3 * pantryScore + 1 * timeScore + 2 * applianceScore;
+			};
+			return score(b) - score(a);
+		});
+
+		setRecipes(rankedRecipes);
+		setSelectedRecipe(rankedRecipes[0]);
 	}
 
 	function recipeDisplay(recipe) {
