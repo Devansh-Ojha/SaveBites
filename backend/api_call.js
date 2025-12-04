@@ -18,23 +18,29 @@ import cors from 'cors'
 app.use(express.json());
 app.use(cors());
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/')
-    },
-    filename: function (req, file, cb) {
-        // Keeps the original extension (e.g. .png, .jpg)
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        const ext = path.extname(file.originalname);
-        cb(null, file.fieldname + '-' + uniqueSuffix + ext)
-    }
-});
-const upload = multer({ storage: storage });
-
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Configure multer for file uploads
+const uploadDir = path.join(__dirname, 'uploads');
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        // Check if directory exists, if not, create it
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        // Save to the absolute path
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    }
+});
+
+const upload = multer({ storage: storage });
 
 async function connect() {
     try {
