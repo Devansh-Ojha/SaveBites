@@ -74,4 +74,3 @@ class UserProfile():
         # # can make a max heap
         # # [ (recipe, rating)]
         # self.disliked_recipes = []
-
