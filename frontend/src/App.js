@@ -15,6 +15,7 @@ function App() {
   const [cuisines, setCuisines] = useState([]);
   const [appliances, setAppliances] = useState([]);
   const [allergens, setAllergens] = useState([]);
+  const [username, setUsername] = useState("");
   const [pantryItems, setPantryItems] = useState([
     'Apples',
     'Bananas',
@@ -36,12 +37,12 @@ function App() {
     <Router>
       <div className="App">
       
-        <Navbar />
+        <Navbar username={username}/>
         <Routes>
           <Route path="/" element={<Hero />}></Route>
-          <Route path="/login" element={<Login />}></Route>
+          <Route path="/login" element={<Login setPantryItems={setPantryItems} setUsername={setUsername}/>}></Route>
           <Route path="/signup" element={<Signup />}></Route>
-          <Route path="/profile" element={<UserProfile name={"Tester"}/>}></Route>
+          <Route path="/profile" element={<UserProfile name={username}/>}></Route>
           <Route path="/upload" element={<UploadReceipts pantryItems={pantryItems} setPantryItems={setPantryItems}/>}></Route>
           <Route path="/generate" element={<Generate pantryItems={pantryItems} time={timeState[0]} difficulty={difficultyState[0]} budget={budgetState[0]} allergens={allergens} appliances={appliances} cuisines={cuisines}/>}></Route>
           <Route path="/recipes" element={<Recipes />}></Route>

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import './Recipes.css';
+
 
 export default function Recipes() {
 	const [recipe, setRecipe] = useState("");

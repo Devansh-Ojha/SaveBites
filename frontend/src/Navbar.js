@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import "./Navbar.css";
 import "./buttons.css";
 
-export default function Navbar() {
+export default function Navbar({username}) {
   return (
     <nav className="navbar">
       <div className="navbar-structure">
@@ -20,15 +20,15 @@ export default function Navbar() {
         </div>
 
         <div className="navbar-links-right">
-          <Link to="/profile" className="navbar-link">
+          {username && <Link to="/profile" className="navbar-link">
             Profile
-          </Link>
-          <Link to="/login" className="navbar-link">
+          </Link>}
+          {!username && <Link to="/login" className="navbar-link">
             Login
-          </Link>
-          <Link to="/signup" className="navbar-link navbar-link--primary">
+          </Link>}
+          {!username && <Link to="/signup" className="navbar-link navbar-link--primary">
             Signup
-          </Link>
+          </Link>}
         </div>
 
       </div>

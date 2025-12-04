@@ -48,6 +48,12 @@ export default function UploadReceipts({pantryItems, setPantryItems}) {
             if (ingredients && Array.isArray(ingredients)) {
                 setPantryItems([...pantryItems, ...ingredients]);
             }
+
+            try {
+
+            } catch (err) {
+                
+            }
         } catch (err) {
             console.error("Error processing receipt:", err);
             setError(err.message || "Failed to process receipt");
