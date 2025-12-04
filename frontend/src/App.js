@@ -43,7 +43,7 @@ function App() {
           <Route path="/login" element={<Login setPantryItems={setPantryItems} setUsername={setUsername}/>}></Route>
           <Route path="/signup" element={<Signup />}></Route>
           <Route path="/profile" element={<UserProfile name={username}/>}></Route>
-          <Route path="/upload" element={<UploadReceipts pantryItems={pantryItems} setPantryItems={setPantryItems}/>}></Route>
+          <Route path="/upload" element={<UploadReceipts username={username} pantryItems={pantryItems} setPantryItems={setPantryItems}/>}></Route>
           <Route path="/generate" element={<Generate pantryItems={pantryItems} time={timeState[0]} difficulty={difficultyState[0]} budget={budgetState[0]} allergens={allergens} appliances={appliances} cuisines={cuisines}/>}></Route>
           <Route path="/recipes" element={<Recipes />}></Route>
           <Route path="/preferences" element={<Preferences timeState={timeState} difficultyState={difficultyState} budgetState={budgetState} setAllergens={setAllergens} setCuisines={setCuisines} setAppliances={setAppliances}/>}></Route>

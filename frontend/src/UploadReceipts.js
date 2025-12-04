@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './UploadReceipts.css';
 import './buttons.css';
 
-export default function UploadReceipts({pantryItems, setPantryItems}) {
+export default function UploadReceipts({username, pantryItems, setPantryItems}) {
     const [fileName, setFileName] = useState("");
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState("");
@@ -48,11 +48,15 @@ export default function UploadReceipts({pantryItems, setPantryItems}) {
             if (ingredients && Array.isArray(ingredients)) {
                 setPantryItems([...pantryItems, ...ingredients]);
             }
-
+            //add extracted ingredients to user
             try {
-
+                const response = await fetch(`http://localhost:3001/user-ingredients/${username}`, {
+                method: 'POST',
+                body: JSON.stringify(data)
+                });
+                console.log(response)
             } catch (err) {
-                
+                console.log(err)
             }
         } catch (err) {
             console.error("Error processing receipt:", err);

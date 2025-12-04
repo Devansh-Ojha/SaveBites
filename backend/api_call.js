@@ -113,7 +113,7 @@ connect();
 // Define your schema (e.g., for a 'Product' model)
 const userProfileSchema = new mongoose.Schema({
     username: { type: String, required: true, trim: true, unique: true },
-    password: [String], 
+    password: { type: String, required: true }, 
     dietaryRestrictions: [String],
     cuisinePreferences: [String],
     budget: Number,
@@ -401,6 +401,43 @@ app.post('/ocr', upload.single('file'), async (req, res) => {
         return res.status(500).json({ error: "OCR processing failed" });
     }
 });
+
+app.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "username and password are required" });
+    }
+
+    const user = await UserProfile.findByUsername(username);
+    if (!user) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    if (user.password !== password) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+    
+    const safeUser = {
+      username: user.username,
+      dietaryRestrictions: user.dietaryRestrictions,
+      cuisinePreferences: user.cuisinePreferences,
+      budget: user.budget,
+      timeAvailable: user.timeAvailable,
+      appliances: user.appliances,
+      recipeRatings: user.recipeRatings,
+      ingredients: user.ingredients,
+    };
+
+    return res.status(200).json({ message: "Login successful", user: safeUser });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Login failed" });
+  }
+});
+
+
 
 // Start the server
 app.listen(port, () => {

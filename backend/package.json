@@ -4,7 +4,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mongodb": "^6.20.0",
-    "mongoose": "^8.19.3",
+    "mongoose": "^8.20.1",
     "multer": "^2.0.2",
     "pluralize": "^8.0.0"
   }
