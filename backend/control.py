@@ -1,6 +1,7 @@
 import os
 import sys
 from dotenv import load_dotenv
+import json
 
 # Load environment variables from .env
 load_dotenv()
@@ -34,29 +35,57 @@ user = UserProfile(
 # Generate recipes
 all_recipes = []
 n_recipes = 5
-
+recipes = []
 for _ in range(n_recipes):
-    recipes = llm.generate_recipes(user, n_recipes=1)
-    for r in recipes:
-        try:
-            if isinstance(r, dict):
-                all_recipes.append(r)
-            elif isinstance(r, str):
-                # Try to parse JSON string into dict
-                all_recipes.append(json.loads(r))
-            else:
-                # If it’s already some other type (e.g., Recipe object), convert to dict
-                all_recipes.append(r.__dict__)
-        except Exception as e:
-            print("Failed to parse recipe as dict:", e)
-            print("Raw output:", r)
+    recipes += llm.generate_recipes(user, n_recipes=1)
+
+for r in recipes:
+    try:
+        # Already a Recipe object
+        if isinstance(r, Recipe):
+            all_recipes.append(r)
+        # Dictionary from LLM
+        elif isinstance(r, dict):
+            all_recipes.append(Recipe(
+                title=r.get("Title", "Unknown"),
+                ingredients=r.get("Ingredients", []),
+                cook_minutes=r.get("Estimated Time", 0),
+                price_estimate_usd=r.get("Estimated Cost", 0),
+                cuisine=r.get("Cuisine Type"),
+                tags=r.get("Tags", []),
+                appliances=r.get("Appliances", []),
+                procedure=r.get("Procedure", "")
+            ))
+        # JSON string
+        elif isinstance(r, str):
+            try:
+                recipe_dict = json.loads(r)
+            except json.JSONDecodeError:
+                print("Skipping invalid JSON:", r)
+                continue  # skip this one
+            all_recipes.append(Recipe(
+                title=recipe_dict.get("Title", "Unknown"),
+                ingredients=recipe_dict.get("Ingredients", []),
+                cook_minutes=recipe_dict.get("Estimated Time", 0),
+                price_estimate_usd=recipe_dict.get("Estimated Cost", 0),
+                cuisine=recipe_dict.get("Cuisine Type"),
+                tags=recipe_dict.get("Tags", []),
+                appliances=recipe_dict.get("Appliances", []),
+                procedure=recipe_dict.get("Procedure", "")
+            ))
+        else:
+            print("Skipping unknown recipe type:", type(r), r)
+    except Exception as e:
+        print("Failed to parse recipe:", e)
+        print("Raw output:", r)
+
 
 # Print the result
-ranker = Ranker(api_key=os.getenv("MY_API_KEY"))
-sorted_recipes = ranker.rank(user_profile=user, recipes=all_recipes)
+#ranker = Ranker(api_key=os.getenv("MY_API_KEY"))
+#sorted_recipes = ranker.rank(user_profile=user, recipes=all_recipes)
 
 print("\nGenerated Recipes:\n")
-for i, recipe in enumerate(sorted_recipes, start=1):
+for i, recipe in enumerate(all_recipes, start=1):
     print(f"Recipe {i}: {recipe.title}")
     print(f"  Cuisine: {recipe.cuisine}")
     print(f"  Estimated Time: {recipe.cook_minutes} minutes")
