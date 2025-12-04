@@ -78,7 +78,7 @@ class Validator:
 
         try:
             result = json.loads(response.text)
-            return bool(result.get("valid", False))
+            return bool(result.get("valid", True))
         except Exception:
             print("VALIDATION JSON ERROR:", response.text)
             return False
