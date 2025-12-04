@@ -17,9 +17,9 @@ class Ranker:
       if cuisine_score == -1:
         cuisine_score = 0
       elif cuisine_score != -1:
-        cuisine_score = len(user_profile.cuisine_preferences) - cuisine_score
-      budget_score = user_profile.budget_usd - recipe.price_estimate_usd)
-      time_score = profile.time_available - recipe.cook_minutes
+        cuisine_score = (len(user_profile.cuisine_preferences) - cuisine_score) / len(user_profile.cuisine_preferences)
+      budget_score = (user_profile.budget_usd - recipe.price_estimate_usd) / user_profile.budget_usd
+      time_score = (user_profile.time_available - recipe.cook_minutes) / user_profile.time_available
       a = 1
       b = 1
       c = 1
