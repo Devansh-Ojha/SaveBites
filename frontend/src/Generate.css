@@ -82,3 +82,8 @@
 	transform: translateY(1px);
   }
   
+  ul {
+  list-style-type: none;
+  margin: 0; /* Optional: Remove default margin */
+  padding: 0; /* Optional: Remove default padding */
+}

@@ -43,7 +43,11 @@ export default function Login({setPantryItems, setUsername}) {
 				
 				if (ingredients.ok) {
 					const ingredient_data = await ingredients.json();
-					setPantryItems(Object.keys(ingredient_data)[0]);
+					let ing = [];
+            		for (let i = 0; i < Object.keys(ingredient_data).length; i++) {
+                		ing.push(Object.keys(ingredient_data)[i]);
+            		}
+					setPantryItems(ing);
 				}
 			} catch (err) {
 				console.error(err)

@@ -39,7 +39,10 @@ export default function UploadReceipts({username, pantryItems, setPantryItems}) 
 
             const data = await response.json();
             console.log("OCR Result:", data);
-            
+            let ingredvalue = new Map();
+            for (let i = 0; i < Object.keys(data).length; i++) {
+                ingredvalue.set(Object.keys(data)[i],data[Object.keys(data)[i]][0])
+            }
             // Handle the extracted ingredients
             let ingredients = [];
             for (let i = 0; i < Object.keys(data).length; i++) {
@@ -48,11 +51,16 @@ export default function UploadReceipts({username, pantryItems, setPantryItems}) 
             if (ingredients && Array.isArray(ingredients)) {
                 setPantryItems([...pantryItems, ...ingredients]);
             }
+
             //add extracted ingredients to user
             try {
+                console.log(JSON.stringify(ingredvalue));
                 const response = await fetch(`http://localhost:3001/user-ingredients/${username}`, {
-                method: 'POST',
-                body: JSON.stringify(data)
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(Object.fromEntries(ingredvalue))
                 });
                 console.log(response)
             } catch (err) {

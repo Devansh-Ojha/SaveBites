@@ -16,6 +16,8 @@ export default function Signup() {
         confirmPassword: "",
     });
 
+    const [passwordError, setPasswordError] = useState("");
+
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false); // To prevent double submissions
 
@@ -36,20 +38,27 @@ export default function Signup() {
     async function handleSubmit(e) {
         e.preventDefault(); // Prevents the default browser page reload
         setIsSubmitting(true);
-
+        
 		const dataToSubmit = {
     		name: formData.name, // Trim whitespace
     		username: formData.username,
   			password: formData.password,
   		  	// Note: confirmPassword is purposefully left out
 		};
-		const jsonBody = JSON.stringify(dataToSubmit);
-		console.log(formData);
-        // If there are no errors, proceed with sign-up logic
-		const response = await createUser(dataToSubmit);
+		let confirmPassword = formData.confirmPassword;
+        let password = formData.password;
+        if (confirmPassword == password) {
+            const jsonBody = JSON.stringify(dataToSubmit);
+            console.log(formData);
+            // If there are no errors, proceed with sign-up logic
+            const response = await createUser(dataToSubmit);
 
-		navigate("/login");
-        console.log("Form data submitted:", formData);
+            navigate("/login");
+            console.log("Form data submitted:", formData);
+        }
+        else {
+            setPasswordError("PLEASE ENTER THE SAME PASSWORD 🦧🦧🦧");
+        }
     };
 
 	return (
@@ -113,8 +122,8 @@ export default function Signup() {
                             value={formData.confirmPassword}
                             onChange={handleChange}
                         />
-					</div>
-
+                        <p style={{color: "red"}}>{passwordError}</p>
+                    </div>
 					<button type="submit" className="btn-primary">Sign Up</button>
 
 				</form>

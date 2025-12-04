@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import './buttons.css';
 import './Generate.css'
@@ -56,35 +55,35 @@ export default function Generate({pantryItems, time, difficulty, budget, allerge
 	function recipeDisplay(recipe) {
 		return (
 		  <div className="recipe-card">
-			<h2>{recipe.name}</h2>
-	  
-			<p><strong>Budget:</strong> ${recipe.budget}  
-			   <span style={{ float: "right" }}><strong>Time:</strong> {recipe.time} min</span>
-			</p>
-	  
-			<h3>Ingredients</h3>
 			<ul>
-			  {recipe.ingredients.map((ing, i) => (
-				<li key={i}>
-				  {ing.item} — {ing.amount} {ing.unit}
-				</li>
-			  ))}
-			</ul>
-	  
-			<h3>Appliances</h3>
-			<ul>
-			  {recipe.appliances.map((app, i) => (
-				<li key={i}>{app}</li>
-			  ))}
-			</ul>
+				<h2>{recipe.name}</h2>
+				<p><strong>Budget:</strong> ${recipe.budget}  
+				<span style={{ float: "right" }}><strong>Time:</strong> {recipe.time} min</span>
+				</p>
+		
+				<h3>Ingredients</h3>
+				<ul>
+				{recipe.ingredients.map((ing, i) => (
+					<li key={i}>
+					{ing.item} — {ing.amount} {ing.unit}
+					</li>
+				))}
+				</ul>
+		
+				<h3>Appliances</h3>
+				<ul>
+				{recipe.appliances.map((app, i) => (
+					<li key={i}>{app}</li>
+				))}
+				</ul>
 
-			<h3>Instructions</h3>
-			<ol>
-			  {recipe.instructions.map((step, i) => (
-				<li key={i}>{step}</li>
-			  ))}
-			</ol>
-	  
+				<h3>Instructions</h3>
+				<ol>
+				{recipe.instructions.map((step, i) => (
+					<li key={i}>{step}</li>
+				))}
+				</ol>
+			</ul>
 		  </div>
 		);
 	  }
@@ -103,7 +102,7 @@ export default function Generate({pantryItems, time, difficulty, budget, allerge
 
 	function listRecipes(recipes) {
 		return (
-			<li>
+			<ul>
 				{recipes.map((item, index) => (
 					<li 
 					  key={index} 
@@ -114,7 +113,7 @@ export default function Generate({pantryItems, time, difficulty, budget, allerge
 						{item.name}
 					</li>
 				))}
-			</li>
+			</ul>
 		);
 	}
 	

@@ -165,7 +165,7 @@ app.get('/users/:username', async (req, res) => {
 // CREATE user
 app.post('/users', async (req, res) => {
     try {
-      const {
+      let {
         username,
         password, 
         dietaryRestrictions,
@@ -179,6 +179,10 @@ app.post('/users', async (req, res) => {
   
       if (!username) {
         return res.status(400).json({ error: "username is required" });
+      }
+
+      if (!ingredients) {
+        ingredients = {};
       }
   
       const newUser = await UserProfile.create({
