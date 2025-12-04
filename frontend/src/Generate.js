@@ -8,6 +8,39 @@ export default function Generate({pantryItems, time, difficulty, budget, allerge
 	const [selectedRecipe, setSelectedRecipe] = useState(null);
 	
 	function generateRecipe() {
+		const payload = {
+			username: "user",
+			pantryItems,
+			time,
+			difficulty,
+			budget,
+			allergens,
+			appliances,
+			cuisines
+		};
+
+		fetch("http://localhost:3001/generate_recipes", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(payload)
+		})
+		.then(res => res.json())
+		.then(data => {
+			if (data.recipes) {
+				setRecipes(data.recipes);
+				setSelectedRecipe(data.recipes[0]);
+			} else {
+				console.error("No recipes returned from server", data);
+			}
+		})
+		.catch(err => {
+			console.error("Error fetching recipes:", err);
+		});
+	}
+
+	function generatetestRecipe() {
 		let testRecipe1 = {
 			name: "Cheese Pizza",
 		  

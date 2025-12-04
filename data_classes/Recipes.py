@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List,Tuple,Set,Dict
+from typing import List,Tuple,Set,Dict,Optional
 
 @dataclass
 class Recipe:
@@ -16,7 +16,7 @@ class Recipe:
 	appliances: Set[str]
 	procedure: str
 	#Nutrition info(optional filled later by USDA API)
-	nutrition: Dict[str,float] | None = None
+	nutrition: Optional[Dict[str, float]] = None
 	def __init__(self, title, ingredients, cook_minutes, price_estimate_usd, cuisine, tags, appliances, procedure):
 		self.title = title
 		self.ingredients = ingredients

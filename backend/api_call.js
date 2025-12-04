@@ -5,18 +5,20 @@ import 'dotenv/config';
 import express from 'express';
 const app = express();
 const port = 3001;
-import mongoose from 'mongoose';
+//import mongoose from 'mongoose';
 import multer from 'multer';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-const uri = process.env.MONGODB_URI
+//const uri = process.env.MONGODB_URI
 import cors from 'cors'
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
 app.use(cors());
+
+
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -36,14 +38,14 @@ const upload = multer({ storage: storage });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function connect() {
+/*async function connect() {
     try {
         await mongoose.connect(uri);
         console.log("Successful connection to MongoDB")
     } catch (error) {
         console.log(error);
     }
-}
+}*/
 
 class UserProfileClass {
     // Model static
@@ -108,10 +110,10 @@ class UserProfileClass {
     }
   }
 
-connect();
+//connect();
 
 // Define your schema (e.g., for a 'Product' model)
-const userProfileSchema = new mongoose.Schema({
+/*const userProfileSchema = new mongoose.Schema({
     username: { type: String, required: true, trim: true, unique: true },
     password: [String], 
     dietaryRestrictions: [String],
@@ -132,7 +134,7 @@ const userProfileSchema = new mongoose.Schema({
   // 4) Model (clean name; schema controls collection)
   const UserProfile = mongoose.models.UserProfile
     || mongoose.model('UserProfile', userProfileSchema);
-
+*/
 app.get('/users', async (req, res) => {
     try {
         const users = await UserProfile.find({}).lean();
@@ -146,8 +148,25 @@ app.get('/users', async (req, res) => {
 app.get('/users/:username', async (req, res) => {
     try {
         const { username } = req.params
-        const user = await UserProfile.findByUsername(req.params.username);
-        if (!user) return res.status(404).json({ error: "Could not find user" });
+        if (mongoAvailable) {
+          try {
+              user = await UserProfile.findByUsername(username);
+          } catch (err) {
+              console.warn("Mongo fetch failed, proceeding without it.");
+          }
+        }
+
+        // If no user from DB, provide a dummy user
+        if (!user) {
+            user = {
+                username: username || "test_user",
+                ingredients: new Map([["tomato", 2], ["cheese", 1], ["flour", 3]]),
+                budget: 10,
+                timeAvailable: 60,
+                appliances: ["Oven", "Stove"],
+                cuisinePreferences: ["Italian"]
+            };
+        }
 
         return res.status(200).json(user);
     } catch(error){
@@ -356,7 +375,9 @@ app.post('/ocr', upload.single('file'), async (req, res) => {
         console.log("script path:", scriptPath);
 
         // Call the Python OCR script
-        const python = spawn('python3.12', [scriptPath, filePath]);
+        const pythonPath = path.resolve(__dirname, 'venv/bin/python');
+        const python = spawn(pythonPath, [scriptPath, JSON.stringify(user)]);
+
         
         let output = '';
         let error = '';
@@ -401,6 +422,66 @@ app.post('/ocr', upload.single('file'), async (req, res) => {
         return res.status(500).json({ error: "OCR processing failed" });
     }
 });
+
+app.post('/generate_recipes', async (req, res) => {
+    try {
+        const { username } = req.body;
+
+        // Use a dummy user object (no MongoDB)
+        const user = {
+            user_id: username || "test_user",
+            dietary_restrictions: [],
+            cuisine_preferences: ["Italian"],
+            budget_usd: 10,
+            time_available: 60,
+            appliances: ["Oven", "Stove"],
+            ingredients: { tomato: 2, cheese: 1, flour: 3 }
+        };
+
+        const scriptPath = path.resolve(__dirname, '../llm_pipeline/llm_recipe_generator.py');
+
+        // Use Python from your venv
+        const pythonPath = path.resolve(__dirname, '../venv/bin/python');
+
+        // Spawn Python
+        const python = spawn(pythonPath, [scriptPath, JSON.stringify(user)], {
+            cwd: path.resolve(__dirname, '..') // Project root so data_classes is visible
+        });
+
+        let output = '';
+        let errorOutput = '';
+
+        python.stdout.on('data', (data) => output += data.toString());
+        python.stderr.on('data', (data) => errorOutput += data.toString());
+
+        python.on('close', (code) => {
+            if (code !== 0) {
+                console.error("Python error:", errorOutput);
+                return res.status(500).json({ error: "Recipe generation failed", details: errorOutput });
+            }
+
+            try {
+                // Split by semicolon for multiple JSON objects
+                const rawObjects = output.split(';');
+                const recipes = rawObjects
+                    .filter(obj => obj.trim())
+                    .map(obj => JSON.parse(obj));
+
+                return res.status(200).json({ recipes });
+            } catch (parseError) {
+                console.error("JSON parse error:", parseError, "Output:", output);
+                return res.status(500).json({ error: "Failed to parse recipes", output });
+            }
+        });
+
+    } catch (err) {
+        console.error("Server error:", err);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+
 
 // Start the server
 app.listen(port, () => {
