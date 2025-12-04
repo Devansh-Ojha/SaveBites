@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { createUser } from "./api.js";
 
+
 export default function Signup() {
 	const navigate = useNavigate()
     // Define state variables for form data and errors

@@ -19,6 +19,11 @@ export const getUserProfile = async (username) => {
 	console.log(response);
     return handleResponse(response);
 };
+// export const confirmUserPassword = async (username) => {
+//     const response = await fetch(`${API_BASE_URL}/users/${username}/verify-password`);
+// 	console.log(response);
+//     return handleResponse(response);
+// };
 
 // 2. Create New User
 export const createUser = async (userData) => {

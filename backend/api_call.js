@@ -14,6 +14,16 @@ import { fileURLToPath } from 'url';
 const uri = process.env.MONGODB_URI
 import cors from 'cors'
 
+import bcrypt from "bcrypt";
+const SALT = 10;
+export async function verifyPassword(plain, hashed) {
+	return bcrypt.compare(plain, hashed);
+}
+
+export async function hashPassword(plain) {
+  return await bcrypt.hash(plain, SALT);
+}
+
 // Middleware to parse JSON request bodies
 app.use(express.json());
 app.use(cors());
@@ -115,7 +125,10 @@ class UserProfileClass {
   }
 
 connect();
-
+app.get('/users/:username/verify-password', async (req, res) => {
+  const user = await UserProfile.findByUsername(req.params.username)
+  return verifyPassword(req.body,user.password);
+});
 // Define your schema (e.g., for a 'Product' model)
 const userProfileSchema = new mongoose.Schema({
     username: { type: String, required: true, trim: true, unique: true },
@@ -184,7 +197,9 @@ app.post('/users', async (req, res) => {
       if (!ingredients) {
         ingredients = {};
       }
-  
+      //hash password to encrypt
+      password = await hashPassword(password);
+
       const newUser = await UserProfile.create({
         username,
         password, 
@@ -415,7 +430,7 @@ app.post('/ocr', upload.single('file'), async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-
+    
     if (!username || !password) {
       return res.status(400).json({ error: "username and password are required" });
     }
@@ -424,8 +439,8 @@ app.post('/login', async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
-
-    if (user.password !== password) {
+    const verified = await verifyPassword(user.password, password);
+    if (verified) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
     
