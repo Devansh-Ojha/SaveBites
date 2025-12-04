@@ -1,3 +1,6 @@
+import json
+from google import genai
+import google.genai as types
 from data_classes.UserProfile import UserProfile
 from data_classes.Recipes import Recipe
 from data_classes.UserPantry import Pantry
@@ -9,123 +12,96 @@ NUM_RECIPES = 5
 class Validator:
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.recipe_llm = RecipeLLM(api_key)
+        self.llm = RecipeLLM(api_key).client
 
     def validate(self, user: UserProfile, pantry: Pantry, recipes: list[Recipe]):
-        valid_recipes = []
-        invalid_feedback = []
+        valid = []
 
-        # Validate initial recipes
-        for recipe in recipes:
-            is_valid, feedback = self._is_valid_recipe(user, pantry, recipe)
-            if is_valid:
-                valid_recipes.append(recipe)
-            else:
-                invalid_feedback.append(feedback)
+        # checks given set of recipes
+        for r in recipes:
+            if self._is_valid_recipe(user, r):
+                valid.append(r)
 
-        # Continue regenerating until enough valid recipes exist
-        while len(valid_recipes) < NUM_RECIPES:
-            feedback_summary = self._build_feedback_summary(invalid_feedback)
-            regen_prompt = self._build_regenerate_prompt(user, feedback_summary)
-
-            response = self.recipe_llm.client.models.generate_content(
+        # regenerate till we have enough
+        while len(valid) < NUM_RECIPES:
+            regen_prompt = self._build_regenerate_prompt(user, pantry)
+            response = self.llm.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=regen_prompt,
-                config=types.GenerateContentConfig(
-                    responseMimeType="application/json",
-                    thinking_config=types.ThinkingConfig(thinking_budget=0)
-                ),
             )
 
-            new_recipes = self.recipe_llm.parse_json(response.text)
-            invalid_feedback = []  # reset per regeneration batch
+            print("REGEN RAW:", response.text)
 
-            for recipe in new_recipes:
-                is_valid, feedback = self._is_valid_recipe(user, pantry, recipe)
-                if is_valid:
-                    valid_recipes.append(recipe)
-                    if len(valid_recipes) == NUM_RECIPES:
+            new_recipes_raw = self._parse_json_list(response.text)
+            new_recipes = [Recipe(**rec) for rec in new_recipes_raw]
+
+            for r in new_recipes:
+                if self._is_valid_recipe(user, r):
+                    valid.append(r)
+                    if len(valid) == NUM_RECIPES:
                         break
-                else:
-                    invalid_feedback.append(feedback)
 
-        return valid_recipes
+        return valid
 
-    # validates recipes and provides feedback for reprompting when invalid
-    def _is_valid_recipe(self, user: UserProfile, pantry: Pantry, recipe: Recipe):
-        validation_prompt = f"""
-        Validate this recipe. Return ONLY JSON with:
-        "valid": boolean,
-        "issues": list of strings describing what must be fixed.
 
-        Validation rules:
-        1. It must NOT contain any ingredient violating the user's dietary restrictions.
-        2. At least {int(INGREDIENT_THRESHOLD * 100)}% of ingredients must appear in the user's pantry.
-        3. All appliances must be in the user's available appliance list.
+    def _parse_json_list(self, text: str):
+        try:
+            data = json.loads(text)
+            return data if isinstance(data, list) else [data]
+        except Exception:
+            print("JSON PARSE ERROR:", text)
+            return []
 
-        User restrictions: {user.dietary_restrictions}
-        User pantry: {pantry.items}
-        User appliances: {user.appliances}
+    
+    def _is_valid_recipe(self, user: UserProfile, recipe: Recipe):
+        prompt = f"""
+        Return JSON:
+        {{
+            "valid": boolean
+        }}
 
-        Recipe title: {recipe.title}
+        Check only this:
+        Does the recipe contain ANY ingredient that violates the user's dietary restrictions?
+
         Recipe ingredients: {recipe.ingredients}
-        Recipe appliances: {recipe.appliances}
+        User restrictions: {user.dietary_restrictions}
 
-        Return only JSON.
+        Output ONLY JSON.
         """
 
-        response = self.recipe_llm.client.models.generate_content(
+        response = self.llm.models.generate_content(
             model="gemini-2.5-flash",
-            contents=validation_prompt,
-            config=types.GenerateContentConfig(
-                responseMimeType="application/json",
-                thinking_config=types.ThinkingConfig(thinking_budget=0)
-            ),
+            contents=prompt,
         )
 
-        results = self.recipe_llm.parse_json(response.text)
+        print("VALIDATION RAW:", response.text)
 
-        if results.get("valid", False):
-            return True, None
+        try:
+            result = json.loads(response.text)
+            return bool(result.get("valid", True))
+        except Exception:
+            print("VALIDATION JSON ERROR:", response.text)
+            return False
 
-        return False, {
-            "title": recipe.title,
-            "issues": results.get("issues", [])
-        }
-
-    # builds prompt for reprompting LLM
-    def _build_feedback_summary(self, feedback_list):
-        summary = "These issues need correction:\n"
-        for feedback in feedback_list:
-            summary += f"- Recipe '{feedback['title']}' failed because:\n"
-            for issue in feedback["issues"]:
-                summary += f"  • {issue}\n"
-        return summary.strip()
-
-    def _build_regenerate_prompt(self, user: UserProfile, feedback_text: str):
-        prompt = f"""
-        Generate new recipes that directly fix all of the following problems:
-
-        {feedback_text}
-
-        User Info:
-        Dietary Restrictions: {user.dietary_restrictions}
-        Cuisine Preferences: {user.cuisine_preferences}
-        Budget: {user.budget_usd}
-        Time Available: {user.time_available}
-        Appliances: {user.appliances}
-        Pantry: {pantry.items}
-
-        Requirements:
-        - Respect all dietary restrictions.
-        - Do not use any appliance not in the user's appliance list.
-        - At least {int(INGREDIENT_THRESHOLD*100)}% of ingredients must come from the pantry.
-        - Stay within budget and time constraints.
-        - Match cuisine preferences when possible.
-
-        Output strictly in JSON.
-        Return a JSON list of recipe objects. No markdown.
-        """
-        return prompt.strip()
-
-
+    def _build_regenerate_prompt(self, user: UserProfile, pantry: Pantry):
+            return f"""
+            Generate {NUM_RECIPES} recipes that obey ALL rules below.
+    
+            User Restrictions: {user.dietary_restrictions}
+            Cuisine Preferences: {user.cuisine_preferences}
+            Budget: {user.budget_usd}
+            Time Available: {user.time_available}
+            Appliances: {user.appliances}
+            Pantry: {pantry.items}
+    
+            Requirements:
+            - No restricted ingredients.
+            - Only use appliances listed.
+            - At least {int(INGREDIENT_THRESHOLD * 100)}% of ingredients must come from the pantry.
+            - Stay within budget and time.
+            - Prefer user cuisine preferences.
+    
+            Return ONLY a JSON list. Each recipe uses keys:
+            "Title", "Ingredients", "Estimated Time", "Estimated Cost", "Cuisine Type", "Tags"
+            No markdown. No explanations.
+            """.strip()
