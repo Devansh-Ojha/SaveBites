@@ -52,10 +52,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Get __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 async function connect() {
     try {
         await mongoose.connect(uri);
@@ -63,7 +59,7 @@ async function connect() {
     } catch (error) {
         console.log(error);
     }
-}*/
+}
 
 class UserProfileClass {
     // Model static
