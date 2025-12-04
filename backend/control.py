@@ -97,6 +97,3 @@ for i, recipe in enumerate(all_recipes, start=1):
         print(f"    - {name}: {qty} {unit}")
     print("  Procedure:")
     print(f"    {recipe.procedure}\n")
-
-
-
