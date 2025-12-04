@@ -111,5 +111,3 @@ class RecipeLLM:
         r = json.loads(response)
         return Recipe(r["Title"], r["Ingredients"], r["Estimated Time"], r["Estimated Cost"], r["Cuisine Type"], r["Tags"], "", "")
     """
-
-
